@@ -1,12 +1,13 @@
 name: Deploy Backend to Cloud Run
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'backend/**'
-      - '.github/workflows/deploy-backend.yml'
-  workflow_dispatch:
+  # Disabled auto-deploy until GitHub Secrets are configured
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'backend/**'
+  #     - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:  # Manual trigger only
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
