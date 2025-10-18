@@ -44,7 +44,7 @@ All services run via Docker Compose for easy local development on Mac M1 and WSL
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/RehearseKit.git
+   git clone https://github.com/UnTypeBeats/RehearseKit.git
    cd RehearseKit
    ```
 
@@ -106,7 +106,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ## Support
 
 - **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/RehearseKit/issues)
+- **Issues**: [GitHub Issues](https://github.com/UnTypeBeats/RehearseKit/issues)
 - **Domain**: [rehearsekit.uk](https://rehearsekit.uk)
 
 ---
