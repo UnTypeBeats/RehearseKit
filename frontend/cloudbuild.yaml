@@ -1,0 +1,18 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=https://rehearsekit-backend-748316872223.us-central1.run.app'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_WS_URL=wss://rehearsekit-websocket-748316872223.us-central1.run.app'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_APP_NAME=RehearseKit'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/rehearsekit-frontend:latest'
+      - '.'
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/rehearsekit-frontend:latest']
+images:
+  - 'gcr.io/$PROJECT_ID/rehearsekit-frontend:latest'
+timeout: 1200s
