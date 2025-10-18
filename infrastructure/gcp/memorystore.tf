@@ -8,7 +8,7 @@ resource "google_redis_instance" "redis" {
   
   redis_version     = "REDIS_7_0"
   display_name      = "RehearseKit Redis"
-  reserved_ip_range = "10.0.1.0/29"
+  # Remove reserved_ip_range - let GCP allocate automatically
   
   authorized_network = google_compute_network.vpc.id
   connect_mode       = "PRIVATE_SERVICE_ACCESS"

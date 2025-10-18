@@ -6,10 +6,10 @@ class Settings(BaseSettings):
     # Application
     APP_NAME: str = "RehearseKit"
     APP_ENV: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False  # Disable debug in production
     
     # Database
-    DATABASE_URL: str
+    DATABASE_URL: str = ""  # Make optional with default
     
     # Redis
     REDIS_URL: str

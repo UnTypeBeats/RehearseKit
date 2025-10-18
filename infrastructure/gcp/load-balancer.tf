@@ -71,6 +71,7 @@ resource "google_compute_backend_service" "frontend" {
     max_ttl           = 86400
     negative_caching  = true
     serve_while_stale = 86400
+    signed_url_cache_max_age_sec = 3600
   }
 }
 
@@ -180,8 +181,8 @@ output "load_balancer_ip" {
   value       = google_compute_global_address.default.address
 }
 
-output "ssl_certificate_status" {
-  description = "Status of the SSL certificate"
-  value       = google_compute_managed_ssl_certificate.default.managed[0].status
+output "ssl_certificate_domains" {
+  description = "Domains configured for the SSL certificate"
+  value       = google_compute_managed_ssl_certificate.default.managed[0].domains
 }
 

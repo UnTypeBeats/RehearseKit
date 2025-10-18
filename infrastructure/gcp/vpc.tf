@@ -32,7 +32,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
 # Serverless VPC Access Connector for Cloud Run
 resource "google_vpc_access_connector" "connector" {
-  name          = "rehearsekit-connector-${var.environment}"
+  name          = "rehearsekit-conn-prod"  # Must be lowercase, max 25 chars
   region        = var.region
   network       = google_compute_network.vpc.name
   ip_cidr_range = "10.8.0.0/28"
