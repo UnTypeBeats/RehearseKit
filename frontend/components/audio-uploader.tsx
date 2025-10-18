@@ -57,10 +57,12 @@ export function AudioUploader() {
       // Invalidate jobs query to refresh the list
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
-    onError: (error: Error) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Job creation error:", error);
       toast({
         title: "Error creating job",
-        description: error.message,
+        description: errorMessage || "An unexpected error occurred",
         variant: "destructive",
       });
     },
