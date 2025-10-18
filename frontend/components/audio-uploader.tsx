@@ -202,24 +202,31 @@ export function AudioUploader() {
       {/* Quality Mode */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Processing Quality</label>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <Button
             type="button"
             variant={qualityMode === "fast" ? "default" : "outline"}
             onClick={() => setQualityMode("fast")}
-            className="flex-1"
+            className="flex-col h-auto py-3"
           >
-            Fast (~2x real-time)
+            <span className="font-semibold">Fast</span>
+            <span className="text-xs opacity-80">~5 min for 3-min song</span>
           </Button>
           <Button
             type="button"
             variant={qualityMode === "high" ? "default" : "outline"}
             onClick={() => setQualityMode("high")}
-            className="flex-1"
+            className="flex-col h-auto py-3"
           >
-            High Quality (~5x real-time)
+            <span className="font-semibold">High Quality</span>
+            <span className="text-xs opacity-80">~15 min for 3-min song</span>
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          {qualityMode === "fast" 
+            ? "Good quality, faster processing. Best for quick rehearsal prep." 
+            : "Best quality separation. Better for production or detailed study."}
+        </p>
       </div>
 
       {/* Submit Button */}

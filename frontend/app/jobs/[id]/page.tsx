@@ -169,15 +169,34 @@ export default function JobDetailPage() {
               </div>
 
               {job.completed_at && (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-sm">Completed</span>
+                <>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">Completed</span>
+                    </div>
+                    <p className="font-medium">
+                      {formatDistanceToNow(new Date(job.completed_at), { addSuffix: true })}
+                    </p>
                   </div>
-                  <p className="font-medium">
-                    {formatDistanceToNow(new Date(job.completed_at), { addSuffix: true })}
-                  </p>
-                </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-sm">Processing Time</span>
+                    </div>
+                    <p className="font-medium">
+                      {(() => {
+                        const start = new Date(job.created_at).getTime();
+                        const end = new Date(job.completed_at).getTime();
+                        const seconds = Math.floor((end - start) / 1000);
+                        const minutes = Math.floor(seconds / 60);
+                        const secs = seconds % 60;
+                        return `${minutes}m ${secs}s`;
+                      })()}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
 
