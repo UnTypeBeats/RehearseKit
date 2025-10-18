@@ -58,8 +58,9 @@ export function JobCard({ job: initialJob }: JobCardProps) {
   }, [job.id, job.status, queryClient]);
 
   const handleDownload = async () => {
-    // This will be implemented with the download endpoint
-    window.open(`/api/jobs/${job.id}/download`, "_blank");
+    // Download from backend API
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
   };
 
   return (

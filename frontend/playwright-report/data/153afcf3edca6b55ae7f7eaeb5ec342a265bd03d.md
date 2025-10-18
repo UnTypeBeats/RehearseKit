@@ -1,0 +1,264 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - link "RehearseKit" [ref=e6] [cursor=pointer]:
+            - /url: /
+            - img [ref=e7]
+            - generic [ref=e10]: RehearseKit
+          - navigation [ref=e11]:
+            - link "Home" [ref=e12] [cursor=pointer]:
+              - /url: /
+            - link "Jobs" [ref=e13] [cursor=pointer]:
+              - /url: /jobs
+        - generic [ref=e15]:
+          - generic "All systems operational" [ref=e16]
+          - generic [ref=e17]: Operational
+    - main [ref=e18]:
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - heading "Job History" [level=1] [ref=e22]
+          - paragraph [ref=e23]: View and manage all your audio processing jobs
+        - generic [ref=e25]:
+          - heading "Completed Jobs" [level=2] [ref=e26]
+          - generic [ref=e27]:
+            - generic [ref=e28]:
+              - generic [ref=e30]:
+                - generic [ref=e31]:
+                  - heading "enfermo kiko" [level=3] [ref=e32]:
+                    - img [ref=e33]
+                    - text: enfermo kiko
+                  - generic [ref=e37]:
+                    - img [ref=e38]
+                    - text: about 3 hours ago
+                - generic [ref=e41]: COMPLETED
+              - generic [ref=e42]:
+                - generic [ref=e43]:
+                  - generic [ref=e44]:
+                    - paragraph [ref=e45]: Source
+                    - paragraph [ref=e46]: File Upload
+                  - generic [ref=e47]:
+                    - paragraph [ref=e48]: Quality
+                    - paragraph [ref=e49]: fast
+                  - generic [ref=e50]:
+                    - paragraph [ref=e51]: Detected BPM
+                    - paragraph [ref=e52]: "133.9"
+                - generic [ref=e53]:
+                  - link "Details" [ref=e54] [cursor=pointer]:
+                    - /url: /jobs/ec20986f-4d71-472e-9de7-429c11aab9d9
+                    - img [ref=e55]
+                    - text: Details
+                  - button "Download" [ref=e59] [cursor=pointer]:
+                    - img [ref=e60]
+                    - text: Download
+            - generic [ref=e63]:
+              - generic [ref=e65]:
+                - generic [ref=e66]:
+                  - heading "WS Final Test" [level=3] [ref=e67]:
+                    - img [ref=e68]
+                    - text: WS Final Test
+                  - generic [ref=e72]:
+                    - img [ref=e73]
+                    - text: about 4 hours ago
+                - generic [ref=e76]: COMPLETED
+              - generic [ref=e77]:
+                - generic [ref=e78]:
+                  - generic [ref=e79]:
+                    - paragraph [ref=e80]: Source
+                    - paragraph [ref=e81]: YouTube
+                  - generic [ref=e82]:
+                    - paragraph [ref=e83]: Quality
+                    - paragraph [ref=e84]: fast
+                  - generic [ref=e85]:
+                    - paragraph [ref=e86]: Detected BPM
+                    - paragraph [ref=e87]: "234.4"
+                - generic [ref=e88]:
+                  - link "Details" [ref=e89] [cursor=pointer]:
+                    - /url: /jobs/6d4bb6c6-8dde-4f90-abea-09067c79b95d
+                    - img [ref=e90]
+                    - text: Details
+                  - button "Download" [ref=e94] [cursor=pointer]:
+                    - img [ref=e95]
+                    - text: Download
+            - generic [ref=e98]:
+              - generic [ref=e100]:
+                - generic [ref=e101]:
+                  - heading "WebSocket Test" [level=3] [ref=e102]:
+                    - img [ref=e103]
+                    - text: WebSocket Test
+                  - generic [ref=e107]:
+                    - img [ref=e108]
+                    - text: about 4 hours ago
+                - generic [ref=e111]: COMPLETED
+              - generic [ref=e112]:
+                - generic [ref=e113]:
+                  - generic [ref=e114]:
+                    - paragraph [ref=e115]: Source
+                    - paragraph [ref=e116]: YouTube
+                  - generic [ref=e117]:
+                    - paragraph [ref=e118]: Quality
+                    - paragraph [ref=e119]: fast
+                  - generic [ref=e120]:
+                    - paragraph [ref=e121]: Detected BPM
+                    - paragraph [ref=e122]: "234.4"
+                - generic [ref=e123]:
+                  - link "Details" [ref=e124] [cursor=pointer]:
+                    - /url: /jobs/7b8aaf88-03aa-42a2-9717-f2d1582c9265
+                    - img [ref=e125]
+                    - text: Details
+                  - button "Download" [ref=e129] [cursor=pointer]:
+                    - img [ref=e130]
+                    - text: Download
+            - generic [ref=e133]:
+              - generic [ref=e135]:
+                - generic [ref=e136]:
+                  - heading "Final Test" [level=3] [ref=e137]:
+                    - img [ref=e138]
+                    - text: Final Test
+                  - generic [ref=e142]:
+                    - img [ref=e143]
+                    - text: about 4 hours ago
+                - generic [ref=e146]: COMPLETED
+              - generic [ref=e147]:
+                - generic [ref=e148]:
+                  - generic [ref=e149]:
+                    - paragraph [ref=e150]: Source
+                    - paragraph [ref=e151]: YouTube
+                  - generic [ref=e152]:
+                    - paragraph [ref=e153]: Quality
+                    - paragraph [ref=e154]: fast
+                  - generic [ref=e155]:
+                    - paragraph [ref=e156]: Detected BPM
+                    - paragraph [ref=e157]: "234.4"
+                - generic [ref=e158]:
+                  - link "Details" [ref=e159] [cursor=pointer]:
+                    - /url: /jobs/116a967a-e50f-4d29-8afc-0e15cd374568
+                    - img [ref=e160]
+                    - text: Details
+                  - button "Download" [ref=e164] [cursor=pointer]:
+                    - img [ref=e165]
+                    - text: Download
+            - generic [ref=e168]:
+              - generic [ref=e170]:
+                - generic [ref=e171]:
+                  - heading "Me at the zoo" [level=3] [ref=e172]:
+                    - img [ref=e173]
+                    - text: Me at the zoo
+                  - generic [ref=e177]:
+                    - img [ref=e178]
+                    - text: about 4 hours ago
+                - generic [ref=e181]: COMPLETED
+              - generic [ref=e182]:
+                - generic [ref=e183]:
+                  - generic [ref=e184]:
+                    - paragraph [ref=e185]: Source
+                    - paragraph [ref=e186]: YouTube
+                  - generic [ref=e187]:
+                    - paragraph [ref=e188]: Quality
+                    - paragraph [ref=e189]: fast
+                  - generic [ref=e190]:
+                    - paragraph [ref=e191]: Detected BPM
+                    - paragraph [ref=e192]: "234.4"
+                - generic [ref=e193]:
+                  - link "Details" [ref=e194] [cursor=pointer]:
+                    - /url: /jobs/d8234032-1c80-478b-9aac-9fe0d3b3be37
+                    - img [ref=e195]
+                    - text: Details
+                  - button "Download" [ref=e199] [cursor=pointer]:
+                    - img [ref=e200]
+                    - text: Download
+            - generic [ref=e203]:
+              - generic [ref=e205]:
+                - generic [ref=e206]:
+                  - heading "Test" [level=3] [ref=e207]:
+                    - img [ref=e208]
+                    - text: Test
+                  - generic [ref=e212]:
+                    - img [ref=e213]
+                    - text: about 4 hours ago
+                - generic [ref=e216]: COMPLETED
+              - generic [ref=e217]:
+                - generic [ref=e218]:
+                  - generic [ref=e219]:
+                    - paragraph [ref=e220]: Source
+                    - paragraph [ref=e221]: YouTube
+                  - generic [ref=e222]:
+                    - paragraph [ref=e223]: Quality
+                    - paragraph [ref=e224]: fast
+                  - generic [ref=e225]:
+                    - paragraph [ref=e226]: Detected BPM
+                    - paragraph [ref=e227]: "234.4"
+                - generic [ref=e228]:
+                  - link "Details" [ref=e229] [cursor=pointer]:
+                    - /url: /jobs/b0798fc7-41ca-482e-bdea-3820ad0d0c8c
+                    - img [ref=e230]
+                    - text: Details
+                  - button "Download" [ref=e234] [cursor=pointer]:
+                    - img [ref=e235]
+                    - text: Download
+            - generic [ref=e238]:
+              - generic [ref=e240]:
+                - generic [ref=e241]:
+                  - heading "Me at the zoo" [level=3] [ref=e242]:
+                    - img [ref=e243]
+                    - text: Me at the zoo
+                  - generic [ref=e247]:
+                    - img [ref=e248]
+                    - text: about 4 hours ago
+                - generic [ref=e251]: COMPLETED
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - generic [ref=e254]:
+                    - paragraph [ref=e255]: Source
+                    - paragraph [ref=e256]: YouTube
+                  - generic [ref=e257]:
+                    - paragraph [ref=e258]: Quality
+                    - paragraph [ref=e259]: fast
+                  - generic [ref=e260]:
+                    - paragraph [ref=e261]: Detected BPM
+                    - paragraph [ref=e262]: "234.4"
+                - generic [ref=e263]:
+                  - link "Details" [ref=e264] [cursor=pointer]:
+                    - /url: /jobs/763f68f6-d97f-415c-bb18-e74f8947c233
+                    - img [ref=e265]
+                    - text: Details
+                  - button "Download" [ref=e269] [cursor=pointer]:
+                    - img [ref=e270]
+                    - text: Download
+            - generic [ref=e273]:
+              - generic [ref=e275]:
+                - generic [ref=e276]:
+                  - heading "Test Song" [level=3] [ref=e277]:
+                    - img [ref=e278]
+                    - text: Test Song
+                  - generic [ref=e282]:
+                    - img [ref=e283]
+                    - text: about 4 hours ago
+                - generic [ref=e286]: COMPLETED
+              - generic [ref=e287]:
+                - generic [ref=e288]:
+                  - generic [ref=e289]:
+                    - paragraph [ref=e290]: Source
+                    - paragraph [ref=e291]: YouTube
+                  - generic [ref=e292]:
+                    - paragraph [ref=e293]: Quality
+                    - paragraph [ref=e294]: fast
+                  - generic [ref=e295]:
+                    - paragraph [ref=e296]: Detected BPM
+                    - paragraph [ref=e297]: "234.4"
+                - generic [ref=e298]:
+                  - link "Details" [ref=e299] [cursor=pointer]:
+                    - /url: /jobs/60374c75-f0fe-433b-be16-0f94ef283ac2
+                    - img [ref=e300]
+                    - text: Details
+                  - button "Download" [ref=e304] [cursor=pointer]:
+                    - img [ref=e305]
+                    - text: Download
+  - region "Notifications (F8)":
+    - list
+  - alert [ref=e308]
+```

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from typing import Optional
@@ -8,6 +9,7 @@ from app.models.job import Job, JobStatus, InputType, QualityMode
 from app.schemas.job import JobResponse, JobListResponse, JobCreate
 from app.tasks.audio_processing import process_audio_job
 from app.services.storage import StorageService
+from app.core.config import settings
 import os
 import aiofiles
 
@@ -138,11 +140,11 @@ async def delete_job(
 
 
 @router.get("/{job_id}/download")
-async def get_download_url(
+async def download_package(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
-    """Get download URL for completed job package"""
+    """Download the completed job package"""
     
     query = select(Job).where(Job.id == job_id)
     result = await db.execute(query)
@@ -157,9 +159,19 @@ async def get_download_url(
     if not job.package_path:
         raise HTTPException(status_code=404, detail="Package not found")
     
-    # Generate signed URL or return local path
-    storage = StorageService()
-    url = await storage.get_download_url(job.package_path)
-    
-    return {"url": url}
+    # For local mode, serve the file directly
+    if settings.STORAGE_MODE == "local":
+        if not os.path.exists(job.package_path):
+            raise HTTPException(status_code=404, detail="Package file not found on disk")
+        
+        return FileResponse(
+            path=job.package_path,
+            filename=f"{job.project_name}_RehearseKit.zip",
+            media_type="application/zip"
+        )
+    else:
+        # For GCS mode, generate signed URL and redirect
+        storage = StorageService()
+        url = await storage.get_download_url(job.package_path)
+        return {"url": url, "redirect": True}
 

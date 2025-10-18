@@ -219,12 +219,19 @@ export default function JobDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" size="lg">
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={() => {
+                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                  window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
+                }}
+              >
                 <Download className="mr-2 h-5 w-5" />
                 Download Complete Package
               </Button>
               <p className="text-xs text-muted-foreground mt-4 text-center">
-                Includes all stems + Cubase project file (.cpr)
+                Includes all stems + DAWproject file
               </p>
             </CardContent>
           </Card>
