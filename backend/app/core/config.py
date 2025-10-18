@@ -29,7 +29,12 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_PATH: str = "/tmp/storage"
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://rehearsekit-frontend-748316872223.us-central1.run.app",
+        "https://rehearsekit-backend-748316872223.us-central1.run.app"
+    ]
     
     # Job retention
     JOB_RETENTION_DAYS: int = 7
