@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+
+# Long-Running Command Management Protocol
+
+## Command Execution Monitoring
+
+When executing any command (shell, build, test, deployment, etc.):
+
+### 1. Pre-Execution Assessment
+Before running ANY command:
+- Estimate expected execution time
+- If expected time > 30 seconds, MUST implement timeout monitoring
+- Ask user: "This command may take a while. What timeout should I set? (default: [reasonable estimate based on operation])"
+
+### 2. Timeout Configuration
+For commands expected to run > 30 seconds:
+- **Development commands** (npm install, pip install): Default 5 minutes
+- **Build commands** (webpack, tsc, docker build): Default 10 minutes  
+- **Test suites**: Default 15 minutes
+- **Deployment operations**: Default 20 minutes
+- **Database migrations**: Default 10 minutes
+- **AI model training**: Ask user (no default)
+
+### 3. Monitoring Requirements
+Implement timeout monitoring with:
+```bash
+# Bash example
+timeout <TIMEOUT_SECONDS> <COMMAND> || {
+  EXIT_CODE=$?
+  if [ $EXIT_CODE -eq 124 ]; then
+    echo "⚠️  Command timed out after <TIMEOUT_SECONDS> seconds"
+    # Cleanup if needed
+  fi
+}
