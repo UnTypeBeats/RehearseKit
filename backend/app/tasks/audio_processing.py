@@ -139,18 +139,19 @@ def process_audio_job(self, job_id: str):
         final_bpm = job.manual_bpm or detected_bpm
         audio_service.embed_tempo_metadata(stems_dir, final_bpm)
         
-        # 6. Generate Cubase project
-        update_job_status(job_id, "PACKAGING", 90, redis_client)
-        cubase_gen = CubaseProjectGenerator()
-        cpr_path = cubase_gen.generate_project(
+        # 6. Generate DAWproject
+        update_job_status(job_id, "PACKAGING", 85, redis_client)
+        project_gen = CubaseProjectGenerator()
+        dawproject_path = project_gen.generate_project(
             stems_dir,
             job.project_name,
             final_bpm
         )
         
-        # 7. Create package and upload
-        package_path = os.path.join(temp_dir, f"{job.project_name}.zip")
-        audio_service.create_package(stems_dir, cpr_path, package_path)
+        # 7. Create final package and upload
+        update_job_status(job_id, "PACKAGING", 92, redis_client)
+        package_path = os.path.join(temp_dir, f"{job.project_name}_RehearseKit.zip")
+        audio_service.create_package(stems_dir, dawproject_path, package_path)
         
         # Upload to storage
         final_package_path = storage.save_file(

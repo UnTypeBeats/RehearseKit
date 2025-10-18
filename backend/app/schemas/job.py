@@ -17,18 +17,18 @@ class JobStatus(str, Enum):
 
 
 class InputType(str, Enum):
-    UPLOAD = "upload"
-    YOUTUBE = "youtube"
+    upload = "upload"
+    youtube = "youtube"
 
 
 class QualityMode(str, Enum):
-    FAST = "fast"
-    HIGH = "high"
+    fast = "fast"
+    high = "high"
 
 
 class JobCreate(BaseModel):
     project_name: str = Field(..., min_length=1, max_length=255)
-    quality_mode: QualityMode = QualityMode.FAST
+    quality_mode: QualityMode = QualityMode.fast
     input_type: InputType
     input_url: Optional[str] = None
     manual_bpm: Optional[float] = Field(None, gt=0, lt=300)

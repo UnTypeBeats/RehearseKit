@@ -45,7 +45,14 @@ class StorageService:
     def save_file(self, source_path: str, destination: str, bucket_name: Optional[str] = None) -> str:
         """Save a local file to storage"""
         if self.mode == "local":
-            return source_path
+            # Save to local storage path
+            local_dest = os.path.join(settings.LOCAL_STORAGE_PATH, destination)
+            Path(local_dest).parent.mkdir(parents=True, exist_ok=True)
+            
+            # Copy file to storage
+            import shutil
+            shutil.copy2(source_path, local_dest)
+            return local_dest
         else:
             bucket = self.gcs_client.bucket(bucket_name or settings.GCS_BUCKET_STEMS)
             blob = bucket.blob(destination)

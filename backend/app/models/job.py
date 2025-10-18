@@ -19,14 +19,14 @@ class JobStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class InputType(str, enum.Enum):
-    UPLOAD = "upload"
-    YOUTUBE = "youtube"
+class InputType(enum.Enum):
+    upload = "upload"
+    youtube = "youtube"
 
 
-class QualityMode(str, enum.Enum):
-    FAST = "fast"
-    HIGH = "high"
+class QualityMode(enum.Enum):
+    fast = "fast"
+    high = "high"
 
 
 class Job(Base):
@@ -39,7 +39,7 @@ class Job(Base):
     input_type = Column(Enum(InputType), nullable=False)
     input_url = Column(String, nullable=True)  # For YouTube URLs
     project_name = Column(String, nullable=False)
-    quality_mode = Column(Enum(QualityMode), default=QualityMode.FAST, nullable=False)
+    quality_mode = Column(Enum(QualityMode), default=QualityMode.fast, nullable=False)
     
     # Processing results
     detected_bpm = Column(Float, nullable=True)

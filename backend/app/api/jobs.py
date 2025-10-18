@@ -28,18 +28,18 @@ async def create_job(
     
     # Determine input type
     if file:
-        actual_input_type = InputType.UPLOAD
+        actual_input_type = InputType.upload
         if not file.filename.endswith(".flac"):
             raise HTTPException(status_code=400, detail="Only FLAC files are supported")
     elif input_url:
-        actual_input_type = InputType.YOUTUBE
+        actual_input_type = InputType.youtube
     else:
         raise HTTPException(status_code=400, detail="Either file or input_url must be provided")
     
     # Create job in database
     job = Job(
         project_name=project_name,
-        quality_mode=QualityMode(quality_mode),
+        quality_mode=QualityMode[quality_mode],  # Get enum by name
         input_type=actual_input_type,
         input_url=input_url,
         manual_bpm=manual_bpm,
