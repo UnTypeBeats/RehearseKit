@@ -44,13 +44,15 @@ class AudioService:
             'ffmpeg',
             '-i', input_path,
             '-ar', '48000',  # 48kHz sample rate
-            '-sample_fmt', 's24',  # 24-bit
+            '-acodec', 'pcm_s24le',  # 24-bit PCM little-endian
             '-ac', '2',  # Stereo
             '-y',  # Overwrite
             output_path
         ]
         
-        subprocess.run(cmd, check=True, capture_output=True)
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"FFmpeg conversion failed: {result.stderr}")
         return output_path
     
     def detect_tempo(self, audio_path: str) -> float:
@@ -80,52 +82,67 @@ class AudioService:
         
         Returns path to directory containing separated stems
         """
-        stems_dir = os.path.join(output_dir, "stems")
-        Path(stems_dir).mkdir(parents=True, exist_ok=True)
+        stems_output = os.path.join(output_dir, "demucs_output")
+        Path(stems_output).mkdir(parents=True, exist_ok=True)
         
         # Demucs model selection
         model = "htdemucs" if quality == "fast" else "htdemucs_ft"
         
-        # Run Demucs
-        # Note: In production, you'd want to capture output and parse progress
+        if progress_callback:
+            progress_callback(5)
+        
+        # Run Demucs - single pass for all stems
+        # Demucs outputs: vocals, drums, bass, other
         cmd = [
             'python', '-m', 'demucs',
-            '--two-stems=vocals',  # First pass: separate vocals
             '-n', model,
-            '-o', stems_dir,
+            '-o', stems_output,
+            '--flac',  # Use FLAC to avoid torchcodec requirement
             audio_path
         ]
         
         if progress_callback:
             progress_callback(10)
         
-        subprocess.run(cmd, check=True, capture_output=True)
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        
+        if result.returncode != 0:
+            raise RuntimeError(f"Demucs separation failed: {result.stderr}")
         
         if progress_callback:
-            progress_callback(50)
+            progress_callback(95)
         
-        # Run full separation
-        cmd_full = [
-            'python', '-m', 'demucs',
-            '-n', model,
-            '-o', stems_dir,
-            audio_path
-        ]
+        # Find the output directory
+        # Demucs creates: stems_output/MODEL_NAME/TRACK_NAME/*.flac
+        model_dir = Path(stems_output) / model
+        if not model_dir.exists():
+            raise FileNotFoundError(f"Demucs output not found in {stems_output}")
         
-        subprocess.run(cmd_full, check=True, capture_output=True)
+        # Find the track directory (should be only one)
+        track_dirs = [d for d in model_dir.iterdir() if d.is_dir()]
+        if not track_dirs:
+            raise FileNotFoundError(f"No track directory found in {model_dir}")
+        
+        stems_dir = track_dirs[0]
+        
+        # Convert FLAC stems to WAV (24-bit/48kHz)
+        wav_stems_dir = os.path.join(output_dir, "stems_wav")
+        Path(wav_stems_dir).mkdir(parents=True, exist_ok=True)
+        
+        for flac_file in Path(stems_dir).glob("*.flac"):
+            wav_file = os.path.join(wav_stems_dir, f"{flac_file.stem}.wav")
+            cmd = [
+                'ffmpeg', '-i', str(flac_file),
+                '-acodec', 'pcm_s24le',
+                '-ar', '48000',
+                '-y', wav_file
+            ]
+            subprocess.run(cmd, check=True, capture_output=True)
         
         if progress_callback:
             progress_callback(100)
         
-        # Find the output directory (Demucs creates subdirs)
-        # Structure: stems/MODEL_NAME/TRACK_NAME/*.wav
-        for subdir in Path(stems_dir).iterdir():
-            if subdir.is_dir():
-                for track_dir in subdir.iterdir():
-                    if track_dir.is_dir():
-                        return str(track_dir)
-        
-        return stems_dir
+        return wav_stems_dir
     
     def embed_tempo_metadata(self, stems_dir: str, bpm: float):
         """Embed tempo information in WAV files"""
