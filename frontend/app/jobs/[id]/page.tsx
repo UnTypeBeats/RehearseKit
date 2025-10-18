@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "use";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
