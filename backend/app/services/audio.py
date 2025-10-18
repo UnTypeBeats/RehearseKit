@@ -24,10 +24,47 @@ class AudioService:
             }],
             'quiet': True,
             'no_warnings': True,
+            # Anti-bot detection measures
+            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'referer': 'https://www.youtube.com/',
+            'headers': {
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-us,en;q=0.5',
+                'Sec-Fetch-Mode': 'navigate',
+            },
+            # Use age gate bypass
+            'age_limit': None,
+            # Retry configuration
+            'retries': 3,
+            'fragment_retries': 3,
+            # Avoid rate limiting
+            'sleep_interval': 1,
+            'max_sleep_interval': 2,
+            # Use extractor args to avoid bot detection
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'skip': ['dash', 'hls'],
+                }
+            },
         }
         
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+        except Exception as e:
+            # If standard download fails, try with po_token bypass
+            if 'Sign in' in str(e) or 'bot' in str(e):
+                # Fallback: try with android client
+                ydl_opts['extractor_args'] = {
+                    'youtube': {
+                        'player_client': ['android_embedded', 'android', 'ios'],
+                    }
+                }
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url])
+            else:
+                raise
         
         # Find the downloaded file
         for file in os.listdir(output_dir):
