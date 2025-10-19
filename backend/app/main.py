@@ -10,16 +10,13 @@ from app.api import jobs, health
 async def lifespan(app: FastAPI):
     # Startup
     try:
-        # Try to create tables, but don't fail if database is not available
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         print(f"Warning: Could not initialize database: {e}")
-        print("Continuing without database - migrations may be needed")
     
     yield
     
-    # Shutdown
     try:
         await engine.dispose()
     except Exception:
@@ -31,15 +28,18 @@ app = FastAPI(
     version="1.0.0",
     description="Transform audio into rehearsal-ready stems and DAW projects",
     lifespan=lifespan,
+    # Increase max request body size to 500MB for FLAC uploads
+    max_request_body_size=500 * 1024 * 1024,
 )
 
-# CORS middleware
+# Increase max upload size to 500MB
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    max_age=3600,
 )
 
 # Include routers
@@ -54,4 +54,3 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs",
     }
-
