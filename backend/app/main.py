@@ -28,8 +28,8 @@ app = FastAPI(
     version="1.0.0",
     description="Transform audio into rehearsal-ready stems and DAW projects",
     lifespan=lifespan,
-    # Increase max request body size to 500MB for FLAC uploads
-    max_request_body_size=500 * 1024 * 1024,
+    # Increase max request body size to 1GB for FLAC uploads
+    max_request_body_size=1024 * 1024 * 1024,
 )
 
 # Increase max upload size to 500MB

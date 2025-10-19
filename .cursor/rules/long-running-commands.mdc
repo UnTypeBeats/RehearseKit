@@ -1,36 +1,92 @@
----
-alwaysApply: true
----
+# Long-Running Command Management
 
-# Long-Running Command Management Protocol
+## Core Principle
+Monitor and manage all commands that may run longer than 30 seconds to prevent indefinite waiting and provide clear feedback.
 
-## Command Execution Monitoring
+## Pre-Execution Protocol
 
-When executing any command (shell, build, test, deployment, etc.):
+### Before Running ANY Command
+1. **Estimate execution time** based on operation type
+2. **If estimated time > 30 seconds:**
+   - Inform user about expected duration
+   - Propose appropriate timeout value
+   - Ask: "This command may take [estimate]. Set timeout to [default]? (y/n/custom)"
 
-### 1. Pre-Execution Assessment
-Before running ANY command:
-- Estimate expected execution time
-- If expected time > 30 seconds, MUST implement timeout monitoring
-- Ask user: "This command may take a while. What timeout should I set? (default: [reasonable estimate based on operation])"
+### Timeout Defaults by Operation Type
+- `npm install`, `pip install`, package managers: **5 minutes**
+- `webpack`, `tsc`, `docker build`, compilation: **10 minutes**
+- Test suites, `pytest`, `jest --coverage`: **15 minutes**
+- Deployments, CI/CD operations: **20 minutes**
+- Database migrations, schema changes: **10 minutes**
+- AI/ML training, large data processing: **Ask user explicitly**
 
-### 2. Timeout Configuration
-For commands expected to run > 30 seconds:
-- **Development commands** (npm install, pip install): Default 5 minutes
-- **Build commands** (webpack, tsc, docker build): Default 10 minutes  
-- **Test suites**: Default 15 minutes
-- **Deployment operations**: Default 20 minutes
-- **Database migrations**: Default 10 minutes
-- **AI model training**: Ask user (no default)
+## Implementation Requirements
 
-### 3. Monitoring Requirements
-Implement timeout monitoring with:
+### Wrap Commands with Timeout Protection
 ```bash
-# Bash example
-timeout <TIMEOUT_SECONDS> <COMMAND> || {
+# Always use timeout wrapper for long-running commands
+timeout ${TIMEOUT_SECONDS} ${COMMAND} || {
   EXIT_CODE=$?
   if [ $EXIT_CODE -eq 124 ]; then
-    echo "⚠️  Command timed out after <TIMEOUT_SECONDS> seconds"
-    # Cleanup if needed
+    echo "⚠️ Command timed out after ${TIMEOUT_SECONDS} seconds"
+    echo "💡 Consider: increasing timeout, checking logs, or canceling operation"
   fi
+  exit $EXIT_CODE
 }
+```
+
+### Progress Monitoring
+While command runs:
+- **Show status updates every 10 seconds** (if command supports progress output)
+- Display: elapsed time, current phase, or "still running..." indicator
+- If progress unavailable, show: "⏳ Running [command]... (elapsed: Xs)"
+
+## Post-Execution Protocol
+
+### After Command Completes (or Times Out)
+1. **Wait for actual completion** - never assume success prematurely
+2. **Check exit code** and display clear status:
+   - ✅ Success (exit 0)
+   - ❌ Failed (exit non-zero)
+   - ⚠️ Timeout (exit 124)
+3. **Verify results** - test that expected outputs exist
+4. **Report feedback**:
+   - Success: "✅ [Command] completed in Xs"
+   - Failure: "❌ [Command] failed. See output above."
+   - Timeout: "⚠️ [Command] exceeded timeout. Check if process needs more time or is stuck."
+
+## User Communication Rules
+
+### Always Be Clear
+- State what you're running and why
+- Provide time estimates upfront
+- Show progress when possible
+- Explain what happened afterward
+- Suggest next steps if something fails
+
+### Example Interaction
+```
+I'm about to run: npm install
+Expected duration: ~2 minutes
+Setting timeout to 5 minutes.
+
+⏳ Installing dependencies... (elapsed: 10s)
+⏳ Installing dependencies... (elapsed: 20s)
+✅ npm install completed in 47s
+
+Testing that node_modules exists...
+✅ Dependencies installed successfully
+```
+
+## Never
+- Run long commands without timeout protection
+- Leave user wondering if command is still running
+- Proceed to next steps before verifying current command succeeded
+- Assume success without checking exit codes
+
+## Always
+- Estimate and communicate expected duration
+- Implement timeout for commands > 30s
+- Monitor progress and show updates
+- Verify completion before continuing
+- Provide clear success/failure feedback
