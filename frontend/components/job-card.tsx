@@ -248,9 +248,9 @@ export function JobCard({ job: initialJob }: JobCardProps) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Cancel Job</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to cancel "{job.project_name}"? 
+                    Are you sure you want to cancel &ldquo;{job.project_name}&rdquo;? 
                     This will stop the processing and cannot be undone.
-                    Progress will be lost and you'll need to start over.
+                    Progress will be lost and you&apos;ll need to start over.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -291,7 +291,7 @@ export function JobCard({ job: initialJob }: JobCardProps) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Job</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete "{job.project_name}"? 
+                    Are you sure you want to delete &ldquo;{job.project_name}&rdquo;? 
                     This will permanently remove the job and all associated files.
                     Downloaded files on your computer will not be affected.
                   </AlertDialogDescription>
