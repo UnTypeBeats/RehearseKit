@@ -1,0 +1,171 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export interface Job {
+  id: string;
+  status: JobStatus;
+  input_type: "upload" | "youtube";
+  input_url?: string;
+  project_name: string;
+  quality_mode: "fast" | "high";
+  detected_bpm?: number;
+  manual_bpm?: number;
+  progress_percent: number;
+  error_message?: string;
+  source_file_path?: string;
+  stems_folder_path?: string;
+  package_path?: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export type JobStatus =
+  | "PENDING"
+  | "CONVERTING"
+  | "ANALYZING"
+  | "SEPARATING"
+  | "FINALIZING"
+  | "PACKAGING"
+  | "COMPLETED"
+  | "FAILED"
+  | "CANCELLED";
+
+export interface CreateJobRequest {
+  project_name: string;
+  quality_mode: "fast" | "high";
+  input_type: "upload" | "youtube";
+  input_url?: string;
+  manual_bpm?: number;
+}
+
+export interface JobListResponse {
+  jobs: Job[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+class ApiClient {
+  private baseUrl: string;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = "An error occurred";
+      try {
+        const errorData = await response.json();
+        // Handle FastAPI validation errors (422)
+        if (errorData.detail) {
+          if (Array.isArray(errorData.detail)) {
+            // Validation errors are arrays
+            errorMessage = errorData.detail.map((err: { loc?: string[]; msg: string }) => 
+              `${err.loc?.join('.') || 'Field'}: ${err.msg}`
+            ).join(', ');
+          } else if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+        } else {
+          errorMessage = errorData.message || JSON.stringify(errorData);
+        }
+      } catch {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async createJob(data: CreateJobRequest, file?: File): Promise<Job> {
+    // Backend expects FormData for all requests
+    const formData = new FormData();
+    formData.append("project_name", data.project_name);
+    formData.append("quality_mode", data.quality_mode);
+    
+    if (data.input_type === "upload" && file) {
+      formData.append("file", file);
+    } else if (data.input_type === "youtube" && data.input_url) {
+      formData.append("input_url", data.input_url);
+    }
+    
+    if (data.manual_bpm) {
+      formData.append("manual_bpm", data.manual_bpm.toString());
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/jobs/create`, {
+      method: "POST",
+      body: formData,
+      // Don't set Content-Type - browser will set it with boundary for FormData
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Failed to create job";
+      try {
+        const errorData = await response.json();
+        // Handle FastAPI validation errors (422)
+        if (errorData.detail) {
+          if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map((err: { loc?: string[]; msg: string }) => 
+              `${err.loc?.join('.') || 'Field'}: ${err.msg}`
+            ).join(', ');
+          } else if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else {
+            errorMessage = JSON.stringify(errorData.detail);
+          }
+        } else {
+          errorMessage = errorData.message || JSON.stringify(errorData);
+        }
+      } catch {
+        errorMessage = `${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.json();
+  }
+
+  async getJobs(page = 1, pageSize = 20): Promise<JobListResponse> {
+    return this.request<JobListResponse>(
+      `/api/jobs?page=${page}&page_size=${pageSize}`
+    );
+  }
+
+  async getJob(jobId: string): Promise<Job> {
+    return this.request<Job>(`/api/jobs/${jobId}`);
+  }
+
+  async deleteJob(jobId: string): Promise<void> {
+    return this.request<void>(`/api/jobs/${jobId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getDownloadUrl(jobId: string): Promise<{ url: string }> {
+    return this.request<{ url: string }>(`/api/jobs/${jobId}/download`);
+  }
+
+  async healthCheck(): Promise<{ status: string; [key: string]: string }> {
+    return this.request<{ status: string; [key: string]: string }>("/api/health");
+  }
+}
+
+export const apiClient = new ApiClient(API_URL);
+
