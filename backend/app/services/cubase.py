@@ -35,6 +35,13 @@ class CubaseProjectGenerator:
         app.set("name", "RehearseKit")
         app.set("version", "1.0")
         
+        # Project-level sample rate (for Studio One)
+        # This sets the default project sample rate to 48kHz
+        project_elem = ET.SubElement(root, "ProjectSettings")
+        sample_rate_elem = ET.SubElement(project_elem, "SampleRate")
+        sample_rate_elem.set("value", "48000")
+        sample_rate_elem.text = "48000"
+        
         # Transport (tempo and time signature)
         transport = ET.SubElement(root, "Transport")
         

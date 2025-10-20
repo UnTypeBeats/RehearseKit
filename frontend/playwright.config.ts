@@ -8,10 +8,21 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   
+  // Global setup and teardown
+  globalSetup: './e2e/global-setup.ts',
+  globalTeardown: './e2e/global-teardown.ts',
+  
+  // Increased timeouts for audio processing tests
+  timeout: 180000, // 3 minutes per test (audio processing can be slow)
+  expect: {
+    timeout: 30000, // 30 seconds for assertions
+  },
+  
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
   projects: [

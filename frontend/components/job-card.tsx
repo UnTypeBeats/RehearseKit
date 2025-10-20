@@ -3,15 +3,68 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Download, ExternalLink, Clock, Music } from "lucide-react";
+import { Download, ExternalLink, Clock, Music, X, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { type Job } from "@/lib/api";
 import { JobProgressSocket, type JobProgressUpdate } from "@/lib/websocket";
 import { getStatusBadgeVariant } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Helper function to get user-friendly status messages
+function getStatusMessage(status: string, progress: number): string {
+  switch (status) {
+    case "PENDING":
+      return "Queued for processing...";
+    case "CONVERTING":
+      return "Converting audio to WAV format...";
+    case "ANALYZING":
+      return "Analyzing tempo and detecting BPM...";
+    case "SEPARATING":
+      if (progress < 40) return "Loading AI model...";
+      if (progress < 70) return "Separating stems with AI (this takes 2-5 minutes)...";
+      return "Finalizing stem separation...";
+    case "FINALIZING":
+      return "Embedding metadata into stems...";
+    case "PACKAGING":
+      return "Creating download package...";
+    default:
+      return "Processing...";
+  }
+}
+
+// Helper function to get detailed status information
+function getStatusDetails(status: string): string {
+  switch (status) {
+    case "PENDING":
+      return "Your job is in the queue and will start soon";
+    case "CONVERTING":
+      return "Converting to 24-bit/48kHz professional format";
+    case "ANALYZING":
+      return "Using librosa to detect tempo and beats";
+    case "SEPARATING":
+      return "Using Demucs AI to separate vocals, drums, bass, and other instruments";
+    case "FINALIZING":
+      return "Adding tempo information to each stem file";
+    case "PACKAGING":
+      return "Bundling stems and creating DAWproject file";
+    default:
+      return "";
+  }
+}
 
 interface JobCardProps {
   job: Job;
@@ -19,6 +72,8 @@ interface JobCardProps {
 
 export function JobCard({ job: initialJob }: JobCardProps) {
   const [job, setJob] = useState(initialJob);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -63,6 +118,43 @@ export function JobCard({ job: initialJob }: JobCardProps) {
     window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
   };
 
+  const handleCancel = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/api/jobs/${job.id}/cancel`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        setJob((prev) => ({ ...prev, status: "CANCELLED" }));
+        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        setShowCancelDialog(false);
+      } else {
+        console.error("Failed to cancel job");
+      }
+    } catch (error) {
+      console.error("Error canceling job:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/api/jobs/${job.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["jobs"] });
+        setShowDeleteDialog(false);
+      } else {
+        console.error("Failed to delete job");
+      }
+    } catch (error) {
+      console.error("Error deleting job:", error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -83,12 +175,20 @@ export function JobCard({ job: initialJob }: JobCardProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Progress Bar */}
+        {/* Progress Bar with Status Message */}
         {!["COMPLETED", "FAILED", "CANCELLED"].includes(job.status) && (
           <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-kit-purple">
+                {getStatusMessage(job.status, job.progress_percent)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {job.progress_percent}%
+              </span>
+            </div>
             <Progress value={job.progress_percent} className="h-2" />
-            <p className="text-xs text-muted-foreground text-right">
-              {job.progress_percent}%
+            <p className="text-xs text-muted-foreground">
+              {getStatusDetails(job.status)}
             </p>
           </div>
         )}
@@ -131,6 +231,39 @@ export function JobCard({ job: initialJob }: JobCardProps) {
               Details
             </Link>
           </Button>
+          
+          {/* Cancel button for in-progress jobs */}
+          {!["COMPLETED", "FAILED", "CANCELLED"].includes(job.status) && (
+            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel Job</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to cancel "{job.project_name}"? 
+                    This will stop the processing and cannot be undone.
+                    Progress will be lost and you'll need to start over.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep Processing</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Cancel Job
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+          
+          {/* Download button for completed jobs */}
           {job.status === "COMPLETED" && (
             <Button
               size="sm"
@@ -140,6 +273,37 @@ export function JobCard({ job: initialJob }: JobCardProps) {
               <Download className="mr-2 h-4 w-4" />
               Download
             </Button>
+          )}
+          
+          {/* Delete button for finished or cancelled jobs */}
+          {["COMPLETED", "FAILED", "CANCELLED"].includes(job.status) && (
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{job.project_name}"? 
+                    This will permanently remove the job and all associated files.
+                    Downloaded files on your computer will not be affected.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep Job</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    Delete Permanently
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </CardContent>

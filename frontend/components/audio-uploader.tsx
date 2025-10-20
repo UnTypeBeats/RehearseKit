@@ -82,16 +82,21 @@ export function AudioUploader() {
     setIsDragging(false);
     
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.name.endsWith(".flac")) {
+    const fileName = droppedFile?.name.toLowerCase() || "";
+    const isValidFormat = fileName.endsWith(".flac") || fileName.endsWith(".mp3") || fileName.endsWith(".wav");
+    
+    if (droppedFile && isValidFormat) {
       setFile(droppedFile);
       setInputType("upload");
       if (!projectName) {
-        setProjectName(droppedFile.name.replace(".flac", ""));
+        // Remove extension from filename to suggest project name
+        const nameWithoutExt = droppedFile.name.replace(/\.(flac|mp3|wav)$/i, "");
+        setProjectName(nameWithoutExt);
       }
     } else {
       toast({
         title: "Invalid file",
-        description: "Please upload a FLAC file",
+        description: "Please upload MP3, WAV, or FLAC files only",
         variant: "destructive",
       });
     }
@@ -118,7 +123,7 @@ export function AudioUploader() {
           className="flex-1"
         >
           <Upload className="mr-2 h-4 w-4" />
-          Upload FLAC
+          Upload Audio
         </Button>
         <Button
           type="button"
@@ -144,12 +149,12 @@ export function AudioUploader() {
           <CardContent className="flex flex-col items-center justify-center p-12">
             <Upload className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-sm text-muted-foreground mb-2">
-              Drag and drop your FLAC file here, or click to browse
+              Drag and drop your audio file here (MP3, WAV, FLAC), or click to browse
             </p>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".flac"
+              accept=".flac,.mp3,.wav,audio/mpeg,audio/wav,audio/flac"
               onChange={handleFileSelect}
               className="hidden"
               id="file-upload"

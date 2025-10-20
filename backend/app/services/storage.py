@@ -21,7 +21,9 @@ class StorageService:
     
     async def save_upload(self, file: UploadFile, job_id: UUID) -> str:
         """Save uploaded file"""
-        filename = f"{job_id}_source.flac"
+        # Preserve original file extension for proper processing
+        file_ext = os.path.splitext(file.filename)[1]
+        filename = f"{job_id}_source{file_ext}"
         
         if self.mode == "local":
             file_path = os.path.join(settings.LOCAL_STORAGE_PATH, "uploads", filename)

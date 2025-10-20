@@ -1,0 +1,169 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'websocket/**'
+      - '.github/workflows/build-images.yml'
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      tag:
+        description: 'Docker image tag'
+        required: false
+        default: 'latest'
+
+env:
+  DOCKER_REGISTRY: docker.io
+  IMAGE_TAG: ${{ github.event.inputs.tag || 'latest' }}
+
+jobs:
+  build-backend:
+    name: Build Backend Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-backend
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+            type=sha,prefix={{branch}}-
+      
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-backend:buildcache,mode=max
+          platforms: linux/amd64
+      
+      - name: Image digest
+        run: echo "Backend image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  build-frontend:
+    name: Build Frontend Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-frontend
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+            type=sha,prefix={{branch}}-
+      
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-frontend:buildcache,mode=max
+          platforms: linux/amd64
+      
+      - name: Image digest
+        run: echo "Frontend image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  build-websocket:
+    name: Build WebSocket Image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-websocket
+          tags: |
+            type=raw,value=${{ env.IMAGE_TAG }}
+            type=sha,prefix={{branch}}-
+      
+      - name: Build and push WebSocket image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./websocket
+          file: ./websocket/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-websocket:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-websocket:buildcache,mode=max
+          platforms: linux/amd64
+      
+      - name: Image digest
+        run: echo "WebSocket image pushed with digest ${{ steps.meta.outputs.digest }}"
+
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-frontend, build-websocket]
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "✅ All Docker images built and pushed successfully"
+          echo "Registry: ${{ env.DOCKER_REGISTRY }}"
+          echo "Username: ${{ secrets.DOCKERHUB_USERNAME }}"
+          echo "Tag: ${{ env.IMAGE_TAG }}"
+          echo ""
+          echo "Images:"
+          echo "- ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-backend:${{ env.IMAGE_TAG }}"
+          echo "- ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-frontend:${{ env.IMAGE_TAG }}"
+          echo "- ${{ secrets.DOCKERHUB_USERNAME }}/rehearsekit-websocket:${{ env.IMAGE_TAG }}"
+          echo ""
+          echo "Next steps:"
+          echo "1. Update .env file on TrueNAS with new image tag"
+          echo "2. Run: docker-compose pull"
+          echo "3. Run: docker-compose up -d"
+

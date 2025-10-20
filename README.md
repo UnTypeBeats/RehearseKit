@@ -8,12 +8,12 @@ Transform any audio source into a ready-to-use rehearsal project in minutes. Reh
 
 ## Features
 
-- 🎵 **Audio Input**: Upload FLAC files or paste YouTube URLs
-- 🎼 **Stem Separation**: AI-powered isolation of vocals, drums, bass, guitars, keys, and more
+- 🎵 **Audio Input**: Upload MP3, WAV, or FLAC files, or paste YouTube URLs
+- 🎼 **Stem Separation**: AI-powered isolation of vocals, drums, bass, and other instruments
 - ⏱️ **Tempo Detection**: Automatic BPM analysis with manual override option
-- 🎹 **DAW Integration**: Auto-generated Cubase project files with stems pre-loaded
+- 🎹 **DAW Integration**: Auto-generated .dawproject files (Studio One, Bitwig, Reaper) + manual Cubase import guide
 - 📦 **Download Packages**: Get all stems + project file in one ZIP
-- 🚀 **Cloud-Powered**: Deployed on Google Cloud Platform for reliability and scale
+- 🚀 **Self-Hosted**: Deploy locally or on TrueNAS for zero cloud costs
 
 ---
 
@@ -76,9 +76,17 @@ RehearseKit/
 
 ## Deployment
 
-RehearseKit is designed to deploy to Google Cloud Platform via GitHub Actions.
+RehearseKit supports multiple deployment options:
 
-See [docs/deployment.md](docs/deployment.md) for detailed deployment instructions.
+### TrueNAS SCALE (Recommended)
+Self-hosted deployment on TrueNAS using Docker Compose. Ideal for local/home lab use with zero cloud costs.
+
+See [docs/truenas-deployment.md](docs/truenas-deployment.md) for detailed instructions.
+
+### Google Cloud Platform
+Cloud deployment via GitHub Actions (currently has known issues - see docs/gcp-deployment-issues.md).
+
+See [docs/deployment.md](docs/deployment.md) for GCP deployment instructions.
 
 ---
 

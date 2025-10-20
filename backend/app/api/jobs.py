@@ -31,8 +31,14 @@ async def create_job(
     # Determine input type
     if file:
         actual_input_type = InputType.upload
-        if not file.filename.endswith(".flac"):
-            raise HTTPException(status_code=400, detail="Only FLAC files are supported")
+        # Support MP3, WAV, and FLAC formats
+        SUPPORTED_FORMATS = ['.flac', '.mp3', '.wav']
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        if file_ext not in SUPPORTED_FORMATS:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Unsupported format. Supported formats: {', '.join(SUPPORTED_FORMATS)}"
+            )
     elif input_url:
         actual_input_type = InputType.youtube
     else:
@@ -114,6 +120,35 @@ async def get_job(
         raise HTTPException(status_code=404, detail="Job not found")
     
     return job
+
+
+@router.post("/{job_id}/cancel")
+async def cancel_job(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Cancel a running job"""
+    
+    query = select(Job).where(Job.id == job_id)
+    result = await db.execute(query)
+    job = result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Can only cancel jobs that are not completed or already cancelled
+    if job.status in [JobStatus.COMPLETED, JobStatus.FAILED, JobStatus.CANCELLED]:
+        raise HTTPException(status_code=400, detail=f"Cannot cancel job with status {job.status}")
+    
+    # Update job status to CANCELLED
+    job.status = JobStatus.CANCELLED
+    await db.commit()
+    await db.refresh(job)
+    
+    # TODO: Send signal to Celery to terminate the task
+    # For now, the worker will complete but the job is marked as cancelled
+    
+    return {"message": "Job cancelled successfully", "job": job}
 
 
 @router.delete("/{job_id}")

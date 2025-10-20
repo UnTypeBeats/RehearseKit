@@ -151,7 +151,7 @@ def process_audio_job(self, job_id: str):
         # 7. Create final package and upload
         update_job_status(job_id, "PACKAGING", 92, redis_client)
         package_path = os.path.join(temp_dir, f"{job.project_name}_RehearseKit.zip")
-        audio_service.create_package(stems_dir, dawproject_path, package_path)
+        audio_service.create_package(stems_dir, dawproject_path, package_path, final_bpm)
         
         # Upload to storage
         final_package_path = storage.save_file(

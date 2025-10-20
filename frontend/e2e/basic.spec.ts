@@ -19,8 +19,8 @@ test.describe('RehearseKit - Basic Functionality', () => {
   test('can switch between upload and youtube tabs', async ({ page }) => {
     await page.goto('/');
     
-    // Default should be Upload FLAC
-    const uploadButton = page.getByRole('button', { name: /Upload FLAC/i });
+    // Default should be Upload Audio (supports MP3, WAV, FLAC)
+    const uploadButton = page.getByRole('button', { name: /Upload Audio/i });
     await expect(uploadButton).toBeVisible();
     
     // Click YouTube URL tab
