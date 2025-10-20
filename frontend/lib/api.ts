@@ -1,4 +1,19 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Smart API URL that works for both HTTP and HTTPS
+// When accessed via https://rehearsekit.uk, uses relative path /api (proxied by Cloudflare)
+// When accessed via http://10.0.0.155:30070, uses direct backend URL
+const getApiUrl = () => {
+  // In browser
+  if (typeof window !== 'undefined') {
+    // If accessing via HTTPS (rehearsekit.uk), assume API is at /api path (Cloudflare tunnel)
+    if (window.location.protocol === 'https:') {
+      return window.location.origin; // Will use /api/* paths
+    }
+  }
+  // Otherwise use configured URL or fallback
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+};
+
+const API_URL = getApiUrl();
 
 export interface Job {
   id: string;

@@ -114,7 +114,11 @@ export function JobCard({ job: initialJob }: JobCardProps) {
 
   const handleDownload = async () => {
     // Download from backend API
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    // Use smart URL detection - same logic as api.ts
+    const apiUrl = typeof window !== 'undefined' && window.location.protocol === 'https:'
+      ? window.location.origin  // For https://rehearsekit.uk -> /api/jobs/{id}/download
+      : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
+    
     window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
   };
 
