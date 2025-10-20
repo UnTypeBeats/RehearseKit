@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://localhost:8000",
+        "http://localhost:30070",
+        "http://10.0.0.155:30070",
+        "https://rehearsekit.uk",
+        "https://www.rehearsekit.uk",
         "https://rehearsekit-frontend-748316872223.us-central1.run.app",
         "https://rehearsekit-backend-748316872223.us-central1.run.app"
     ]
