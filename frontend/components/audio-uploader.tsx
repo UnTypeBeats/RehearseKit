@@ -371,7 +371,7 @@ export function AudioUploader() {
       
       {inputType === "youtube" && !youtubePreviewId && (
         <p className="text-xs text-center text-muted-foreground">
-          Click "Fetch Audio" first to preview YouTube video
+          Click &ldquo;Fetch Audio&rdquo; first to preview YouTube video
         </p>
       )}
     </div>

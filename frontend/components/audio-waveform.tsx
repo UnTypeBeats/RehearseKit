@@ -43,7 +43,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true }: AudioW
           wavesurfer.current.pause();
         }
         wavesurfer.current.destroy();
-      } catch (e) {
+      } catch {
         // Ignore cleanup errors (AbortError, etc.)
       }
       wavesurfer.current = null;
@@ -114,7 +114,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true }: AudioW
               instance.pause();
             }
             instance.destroy();
-          } catch (e) {
+          } catch {
             // Silently ignore AbortError - this is expected in dev mode
           }
         }, 0);
