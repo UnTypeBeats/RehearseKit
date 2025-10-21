@@ -34,6 +34,14 @@ export default function JobDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
+  // Smart API URL - same logic as api.ts
+  const getApiUrl = () => {
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+      return window.location.origin;
+    }
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  };
+  
   const { data: initialJob, isLoading, error } = useQuery({
     queryKey: ["job", jobId],
     queryFn: () => apiClient.getJob(jobId),
@@ -76,8 +84,7 @@ export default function JobDetailPage() {
 
   const handleCancel = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/jobs/${jobId}/cancel`, {
+      const response = await fetch(`${getApiUrl()}/api/jobs/${jobId}/cancel`, {
         method: "POST",
       });
 
@@ -92,8 +99,7 @@ export default function JobDetailPage() {
 
   const handleDelete = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const response = await fetch(`${apiUrl}/api/jobs/${jobId}`, {
+      const response = await fetch(`${getApiUrl()}/api/jobs/${jobId}`, {
         method: "DELETE",
       });
 
@@ -271,7 +277,7 @@ export default function JobDetailPage() {
               {/* Waveform */}
               <div>
                 <AudioWaveform 
-                  audioUrl={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/jobs/${job.id}/source`}
+                  audioUrl={`${getApiUrl()}/api/jobs/${job.id}/source`}
                   showControls={true}
                 />
                 <p className="text-xs text-muted-foreground mt-2 text-center">
