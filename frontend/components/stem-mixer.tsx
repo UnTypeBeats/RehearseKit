@@ -73,6 +73,23 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasErrors, setHasErrors] = useState(false);
 
+  // Listen for other audio players and stop mixer
+  useEffect(() => {
+    const handleOtherAudioPlay = () => {
+      if (isPlaying) {
+        // Stop all sources
+        Object.values(tracks).forEach(track => {
+          track.sourceNode?.stop();
+        });
+        setIsPlaying(false);
+        masterWavesurfer.current?.pause();
+      }
+    };
+
+    window.addEventListener('audioplay', handleOtherAudioPlay);
+    return () => window.removeEventListener('audioplay', handleOtherAudioPlay);
+  }, [isPlaying, tracks]);
+
   // Initialize Audio Context and load stems
   useEffect(() => {
     const initAudio = async () => {
@@ -223,6 +240,9 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
       setIsPlaying(true);
       masterWavesurfer.current?.play();
+      
+      // Notify other audio players to stop
+      window.dispatchEvent(new Event('audioplay'));
 
       // Update time
       const updateTime = () => {
@@ -267,10 +287,30 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
   const handleMuteToggle = (stemType: StemType) => {
     setMuted(prev => ({ ...prev, [stemType]: !prev[stemType] }));
+    
+    // If playing, restart from current position with new mute state
+    if (isPlaying) {
+      const savedTime = currentTime;
+      handlePlayPause(); // Stop
+      setTimeout(() => {
+        setCurrentTime(savedTime);
+        setTimeout(() => handlePlayPause(), 10); // Restart
+      }, 10);
+    }
   };
 
   const handleSoloToggle = (stemType: StemType) => {
     setSoloed(prev => prev === stemType ? null : stemType);
+    
+    // If playing, restart from current position with new solo state
+    if (isPlaying) {
+      const savedTime = currentTime;
+      handlePlayPause(); // Stop
+      setTimeout(() => {
+        setCurrentTime(savedTime);
+        setTimeout(() => handlePlayPause(), 10); // Restart
+      }, 10);
+    }
   };
 
   const handleChannelSelect = async (stemType: StemType) => {

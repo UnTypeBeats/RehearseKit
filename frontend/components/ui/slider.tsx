@@ -28,7 +28,7 @@ const Slider = React.forwardRef<
         orientation === "vertical" ? "w-full" : "h-full"
       )} />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb className="block h-7 w-6 rounded-sm bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 border border-slate-400 shadow-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:pointer-events-none disabled:opacity-50 hover:from-slate-200 hover:via-slate-100 hover:to-slate-300 active:shadow-sm relative before:absolute before:inset-1 before:rounded-[1px] before:bg-gradient-to-b before:from-white/40 before:to-transparent" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

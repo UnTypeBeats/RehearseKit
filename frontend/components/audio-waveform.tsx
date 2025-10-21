@@ -50,6 +50,18 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [isReady, isPlaying]);
 
+  // Listen for other audio players and stop this one
+  useEffect(() => {
+    const handleOtherAudioPlay = () => {
+      if (isPlaying && wavesurfer.current) {
+        wavesurfer.current.pause();
+      }
+    };
+
+    window.addEventListener('audioplay', handleOtherAudioPlay);
+    return () => window.removeEventListener('audioplay', handleOtherAudioPlay);
+  }, [isPlaying]);
+
   useEffect(() => {
     if (!waveformRef.current) return;
 
@@ -167,7 +179,13 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
 
   const handlePlayPause = () => {
     if (wavesurfer.current && isReady) {
+      const willPlay = !wavesurfer.current.isPlaying();
       wavesurfer.current.playPause();
+      
+      // Notify other audio players to stop
+      if (willPlay) {
+        window.dispatchEvent(new Event('audioplay'));
+      }
     }
   };
 
