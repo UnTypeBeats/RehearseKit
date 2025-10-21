@@ -97,7 +97,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true }: AudioW
       setCurrentTime(time);
     });
 
-    wavesurfer.current.on('seek', () => {
+    wavesurfer.current.on('interaction', () => {
       setCurrentTime(wavesurfer.current?.getCurrentTime() || 0);
     });
 
