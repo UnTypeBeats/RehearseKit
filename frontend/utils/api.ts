@@ -3,11 +3,14 @@ const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     // HTTPS → use same origin (Cloudflare proxies /api)
     if (window.location.protocol === 'https:') {
-      return window.location.origin;
+      const url = window.location.origin;
+      console.log('[API] HTTPS mode, using origin:', url);
+      return url;
     }
     
     // HTTP → calculate API port from frontend port
     const frontendPort = parseInt(window.location.port || '80');
+    console.log('[API] Frontend port detected:', frontendPort);
     
     // For standard ports (3000, 30070, etc), API is typically frontend_port + 1
     // Or use configured offset/mapping
@@ -21,11 +24,15 @@ const getApiUrl = () => {
       apiPort = frontendPort + 1; // Default: next port
     }
     
-    return `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
+    const url = `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
+    console.log('[API] Calculated API URL:', url);
+    return url;
   }
   
-  // Fallback
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  // Fallback (SSR)
+  const fallback = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  console.log('[API] Fallback (SSR):', fallback);
+  return fallback;
 };
 
 // Getter function - evaluates at runtime, not build time
@@ -93,10 +100,13 @@ class ApiClient {
 
   constructor(getBaseUrl: () => string) {
     this.getBaseUrl = getBaseUrl;
+    console.log('[ApiClient] Initialized with URL getter');
   }
 
   private get baseUrl(): string {
-    return this.getBaseUrl();
+    const url = this.getBaseUrl();
+    console.log('[ApiClient] baseUrl getter called, returning:', url);
+    return url;
   }
 
   private async request<T>(
