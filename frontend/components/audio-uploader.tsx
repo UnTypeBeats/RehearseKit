@@ -48,7 +48,13 @@ export function AudioUploader() {
       setYoutubePreviewId(preview.preview_id);
       setYoutubeTitle(preview.title);
       setYoutubeThumbnail(preview.thumbnail || null);
-      setAudioPreviewUrl(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${preview.preview_url}`);
+      
+      // Use smart URL - same as API calls
+      const baseUrl = typeof window !== 'undefined' && window.location.protocol === 'https:'
+        ? window.location.origin
+        : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
+      
+      setAudioPreviewUrl(`${baseUrl}${preview.preview_url}`);
       
       // Auto-fill project name if empty
       if (!projectName) {
