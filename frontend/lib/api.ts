@@ -1,20 +1,23 @@
-// Smart API URL that works for both HTTP and HTTPS
+// Smart API URL - adapts to environment
 const getApiUrl = () => {
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    
-    // HTTPS (rehearsekit.uk via Cloudflare)
+    // HTTPS → use same origin (Cloudflare proxies /api)
     if (window.location.protocol === 'https:') {
       return window.location.origin;
     }
     
-    // TrueNAS IP
-    if (hostname === '10.0.0.155') {
-      return 'http://10.0.0.155:30071';
+    // HTTP with port 30070 (TrueNAS) → use port 30071 (backend)
+    if (window.location.port === '30070') {
+      return `${window.location.protocol}//${window.location.hostname}:30071`;
+    }
+    
+    // HTTP with port 3000 (local dev) → use port 8000 (dev backend)
+    if (window.location.port === '3000') {
+      return `${window.location.protocol}//${window.location.hostname}:8000`;
     }
   }
   
-  // Fallback for localhost dev
+  // Fallback
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 };
 
