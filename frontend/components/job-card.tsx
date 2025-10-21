@@ -119,7 +119,32 @@ export function JobCard({ job: initialJob }: JobCardProps) {
       ? window.location.origin  // For https://rehearsekit.uk -> /api/jobs/{id}/download
       : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
     
-    window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
+    const downloadUrl = `${apiUrl}/api/jobs/${job.id}/download`;
+    
+    try {
+      // Fetch + Blob method - most compatible with strict browsers like Brave
+      const response = await fetch(downloadUrl);
+      
+      if (!response.ok) {
+        console.error('Download failed:', response.status);
+        return;
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.project_name}_RehearseKit.zip`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download error:', error);
+      // Fallback to direct navigation
+      window.location.href = downloadUrl;
+    }
   };
 
   const handleCancel = async () => {

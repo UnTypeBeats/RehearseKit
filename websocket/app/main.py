@@ -18,7 +18,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 active_connections: Dict[str, list[WebSocket]] = {}
 
 
-@app.websocket("/jobs/{job_id}/progress")
+@app.websocket("/ws/jobs/{job_id}/progress")
 async def job_progress_websocket(websocket: WebSocket, job_id: str):
     """WebSocket endpoint for job progress updates"""
     await websocket.accept()

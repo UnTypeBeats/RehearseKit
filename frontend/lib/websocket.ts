@@ -1,6 +1,16 @@
 "use client";
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
+// Smart WebSocket URL - uses wss:// for HTTPS, ws:// for HTTP
+const getWsUrl = () => {
+  if (typeof window !== 'undefined') {
+    // If accessing via HTTPS (rehearsekit.uk), use wss:// with same origin
+    if (window.location.protocol === 'https:') {
+      return `wss://${window.location.host}`;  // wss://rehearsekit.uk
+    }
+  }
+  // Otherwise use configured URL or fallback
+  return process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
+};
 
 export interface JobProgressUpdate {
   job_id: string;
@@ -30,7 +40,11 @@ export class JobProgressSocket {
 
   connect() {
     try {
-      const url = `${WS_URL}/jobs/${this.jobId}/progress`;
+      // Recalculate WS_URL in case it's dynamic
+      const wsUrl = getWsUrl();
+      // Use /ws/ path for Cloudflare tunnel compatibility (avoids conflict with /jobs pages)
+      const url = `${wsUrl}/ws/jobs/${this.jobId}/progress`;
+      console.log(`WebSocket connecting to: ${url}`);
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
