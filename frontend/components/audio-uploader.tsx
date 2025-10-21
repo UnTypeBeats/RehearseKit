@@ -377,6 +377,34 @@ export function AudioUploader() {
         </p>
       </div>
 
+      {/* Trim Summary Alert */}
+      {trimStart !== null && trimEnd !== null && (
+        <div className="p-4 bg-blue-100 dark:bg-blue-900 rounded-lg border-2 border-blue-400 dark:border-blue-600">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">✂️</span>
+            <div className="flex-1">
+              <p className="font-bold text-blue-900 dark:text-blue-100 mb-2">
+                Trimming Active
+              </p>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                Only the selected region will be processed:
+              </p>
+              <div className="flex gap-4 text-sm font-mono font-bold text-blue-900 dark:text-blue-100">
+                <span>Start: {Math.floor(trimStart / 60)}:{(trimStart % 60).toFixed(0).padStart(2, '0')}</span>
+                <span>→</span>
+                <span>End: {Math.floor(trimEnd / 60)}:{(trimEnd % 60).toFixed(0).padStart(2, '0')}</span>
+                <span className="text-blue-600 dark:text-blue-400">
+                  (Duration: {Math.floor((trimEnd - trimStart) / 60)}:{((trimEnd - trimStart) % 60).toFixed(0).padStart(2, '0')})
+                </span>
+              </div>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                The rest of the audio will be discarded.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Submit Button */}
       <Button
         className="w-full"
@@ -394,7 +422,11 @@ export function AudioUploader() {
             Creating Job...
           </>
         ) : (
-          "Start Processing"
+          <>
+            {trimStart !== null && trimEnd !== null && "✂️ "}
+            Start Processing
+            {trimStart !== null && trimEnd !== null && " (Trimmed)"}
+          </>
         )}
       </Button>
       

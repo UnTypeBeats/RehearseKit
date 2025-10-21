@@ -175,6 +175,14 @@ class ApiClient {
     if (data.manual_bpm) {
       formData.append("manual_bpm", data.manual_bpm.toString());
     }
+    
+    if (data.trim_start !== undefined) {
+      formData.append("trim_start", data.trim_start.toString());
+    }
+    
+    if (data.trim_end !== undefined) {
+      formData.append("trim_end", data.trim_end.toString());
+    }
 
     const response = await fetch(`${this.baseUrl}/api/jobs/create`, {
       method: "POST",
