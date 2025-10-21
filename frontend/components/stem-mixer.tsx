@@ -26,7 +26,14 @@ const STEM_CONFIGS: Record<StemType, { label: string; color: string }> = {
   vocals: { label: "Vocals", color: "#FF6B9D" },
   drums: { label: "Drums", color: "#FFA500" },
   bass: { label: "Bass", color: "#4169E1" },
-  other: { label: "Other", color: "#808080" },
+  other: { label: "Other", color: "#9CA3AF" },
+};
+
+// Convert linear 0-100 to dB
+const volumeToDB = (volume: number): string => {
+  if (volume === 0) return "-∞";
+  const db = 20 * Math.log10(volume / 100);
+  return db >= 0 ? `+${db.toFixed(1)}` : db.toFixed(1);
 };
 
 export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
@@ -125,20 +132,28 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
         if (masterWaveformRef.current && longestDuration > 0) {
           masterWavesurfer.current = WaveSurfer.create({
             container: masterWaveformRef.current,
-            waveColor: '#7C3AED40',
-            progressColor: '#2563EB',
-            cursorColor: '#2563EB',
-            height: 100,
+            waveColor: '#4B5563',
+            progressColor: '#3B82F6',
+            cursorColor: '#3B82F6',
+            height: 120,
             normalize: true,
             barWidth: 2,
             barGap: 1,
-            barRadius: 2,
-            interact: false, // Read-only, just for visualization
+            barRadius: 1,
+            interact: true,
           });
 
           // Load vocals stem by default to show master mix waveform
           const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/vocals`;
           await masterWavesurfer.current.load(stemUrl);
+          
+          // Seek on click
+          masterWavesurfer.current.on('interaction', () => {
+            if (masterWavesurfer.current) {
+              const seekTime = masterWavesurfer.current.getCurrentTime();
+              setCurrentTime(seekTime);
+            }
+          });
         }
 
         setIsLoading(false);
@@ -319,36 +334,37 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Stem Mixer</CardTitle>
-        <CardDescription>
-          DAW-style mixer with vertical faders and master waveform
+    <Card className="bg-slate-950">
+      <CardHeader className="border-b border-slate-800">
+        <CardTitle className="text-slate-100">Stem Mixer</CardTitle>
+        <CardDescription className="text-slate-400">
+          Professional DAW-style mixer with vertical faders
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Master Waveform */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">
-              {selectedChannel ? `${STEM_CONFIGS[selectedChannel].label} Channel` : "Master Mix"}
+      <CardContent className="p-6 space-y-6 bg-gradient-to-b from-slate-900 to-slate-950">
+        {/* Master Waveform Display */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-sm font-medium text-slate-300">
+              {selectedChannel ? `${STEM_CONFIGS[selectedChannel].label}` : "Master Mix"}
             </span>
-            <span className="font-mono text-muted-foreground">
+            <span className="text-xs font-mono text-slate-500 tabular-nums">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
           </div>
-          <div className="bg-black/5 dark:bg-white/5 rounded-lg p-4">
+          <div className="bg-slate-950 rounded-lg p-4 border border-slate-800">
             <div ref={masterWaveformRef} className="w-full" />
           </div>
         </div>
 
         {/* Transport Controls */}
-        <div className="flex items-center justify-center gap-3 pb-4 border-b">
+        <div className="flex items-center justify-center gap-3 py-3 bg-slate-900/50 rounded-lg border border-slate-800">
           <Button
             variant="outline"
             size="icon"
             onClick={handleReset}
             disabled={isLoading}
+            className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
           >
             <RotateCcw className="h-4 w-4" />
           </Button>
@@ -357,7 +373,7 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
             size="lg"
             onClick={handlePlayPause}
             disabled={isLoading}
-            className="w-32"
+            className="w-32 bg-blue-600 hover:bg-blue-700"
           >
             {isPlaying ? (
               <>
@@ -373,8 +389,8 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
           </Button>
         </div>
 
-        {/* Channel Strips (DAW-style vertical faders) */}
-        <div className="grid grid-cols-5 gap-4">
+        {/* Mixer Channels - DAW Style */}
+        <div className="grid grid-cols-5 gap-3">
           {/* Individual Channel Strips */}
           {(["vocals", "drums", "bass", "other"] as StemType[]).map((stemType) => {
             const isSoloed = soloed === stemType;
@@ -384,49 +400,77 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
             return (
               <div
                 key={stemType}
-                className={`flex flex-col items-center space-y-3 p-3 rounded-lg transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-blue-100 dark:bg-blue-950 border-2 border-blue-500'
-                    : 'bg-muted/30 border-2 border-transparent hover:bg-muted/50'
-                }`}
+                className={`flex flex-col items-stretch rounded-lg transition-all cursor-pointer
+                  ${isActive 
+                    ? 'bg-gradient-to-b from-slate-700 to-slate-800 ring-2 ring-blue-500' 
+                    : 'bg-gradient-to-b from-slate-800 to-slate-900 hover:from-slate-750 hover:to-slate-850'
+                  }
+                  border border-slate-700`}
                 onClick={() => handleChannelSelect(stemType)}
               >
-                {/* Channel Label */}
-                <div className="text-center">
+                {/* Channel Header */}
+                <div className="p-3 border-b border-slate-700 text-center">
                   <div
-                    className="w-3 h-3 rounded-full mx-auto mb-1"
-                    style={{ backgroundColor: STEM_CONFIGS[stemType].color }}
+                    className="w-2 h-2 rounded-full mx-auto mb-2"
+                    style={{ backgroundColor: STEM_CONFIGS[stemType].color, boxShadow: `0 0 8px ${STEM_CONFIGS[stemType].color}` }}
                   />
-                  <span className="text-xs font-semibold">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     {STEM_CONFIGS[stemType].label}
                   </span>
                 </div>
 
-                {/* Vertical Volume Fader */}
-                <div className="h-48 flex items-center">
-                  <Slider
-                    value={[effectiveMuted ? 0 : volumes[stemType]]}
-                    min={0}
-                    max={100}
-                    step={1}
-                    orientation="vertical"
-                    onValueChange={(value) => handleVolumeChange(stemType, value)}
-                    disabled={isLoading}
-                    className="h-full"
-                  />
+                {/* dB Meter Display */}
+                <div className="px-3 py-2 text-center border-b border-slate-700/50">
+                  <div className="text-[11px] font-mono font-bold text-green-400 tabular-nums">
+                    {effectiveMuted ? "-∞" : volumeToDB(volumes[stemType])}
+                  </div>
+                  <div className="text-[9px] text-slate-500">dB</div>
                 </div>
 
-                {/* Volume Display */}
-                <div className="text-xs font-mono font-bold tabular-nums min-w-[40px] text-center">
-                  {effectiveMuted ? "---" : `${volumes[stemType]}`}
+                {/* Vertical Fader with Scale */}
+                <div className="px-2 py-4 flex-1 flex items-center justify-center">
+                  <div className="relative flex items-center justify-center">
+                    {/* dB Scale Markings */}
+                    <div className="absolute -left-6 h-full flex flex-col justify-between text-[8px] text-slate-600 font-mono">
+                      <span>10</span>
+                      <span>0</span>
+                      <span>-6</span>
+                      <span>-12</span>
+                      <span>-24</span>
+                      <span>-∞</span>
+                    </div>
+                    
+                    {/* Fader */}
+                    <div className="h-56">
+                      <Slider
+                        value={[effectiveMuted ? 0 : volumes[stemType]]}
+                        min={0}
+                        max={100}
+                        step={1}
+                        orientation="vertical"
+                        onValueChange={(value) => handleVolumeChange(stemType, value)}
+                        disabled={isLoading}
+                        className="h-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Volume Readout */}
+                <div className="px-2 py-2 text-center border-t border-slate-700/50">
+                  <div className="text-xs font-mono font-bold text-slate-300 tabular-nums">
+                    {effectiveMuted ? "---" : volumes[stemType]}
+                  </div>
                 </div>
 
                 {/* Control Buttons */}
-                <div className="flex flex-col gap-1 w-full">
-                  <Button
-                    variant={isSoloed ? "default" : "outline"}
-                    size="sm"
-                    className="w-full h-7 text-xs"
+                <div className="p-2 space-y-1">
+                  <button
+                    className={`w-full h-7 rounded text-[10px] font-bold transition-all ${
+                      isSoloed
+                        ? 'bg-yellow-600 text-white shadow-lg shadow-yellow-600/50'
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSoloToggle(stemType);
@@ -434,11 +478,13 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
                     disabled={isLoading}
                   >
                     S
-                  </Button>
-                  <Button
-                    variant={muted[stemType] ? "secondary" : "outline"}
-                    size="sm"
-                    className="w-full h-7 text-xs"
+                  </button>
+                  <button
+                    className={`w-full h-7 rounded text-[10px] font-bold transition-all ${
+                      muted[stemType]
+                        ? 'bg-red-600 text-white shadow-lg shadow-red-600/50'
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-slate-200'
+                    }`}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleMuteToggle(stemType);
@@ -446,7 +492,17 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
                     disabled={isLoading}
                   >
                     M
-                  </Button>
+                  </button>
+                </div>
+
+                {/* Channel Name Tag */}
+                <div 
+                  className="px-2 py-1.5 text-center border-t border-slate-700"
+                  style={{ backgroundColor: effectiveMuted ? '#1e293b' : `${STEM_CONFIGS[stemType].color}15` }}
+                >
+                  <span className="text-[10px] font-bold tracking-wide" style={{ color: STEM_CONFIGS[stemType].color }}>
+                    {STEM_CONFIGS[stemType].label.toUpperCase()}
+                  </span>
                 </div>
               </div>
             );
@@ -454,41 +510,77 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
           {/* Master Channel Strip */}
           <div 
-            className={`flex flex-col items-center space-y-3 p-3 rounded-lg transition-all cursor-pointer ${
-              selectedChannel === null
-                ? 'bg-gradient-to-b from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-950 border-2 border-blue-500'
-                : 'bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-400 dark:border-slate-600'
-            }`}
+            className={`flex flex-col items-stretch rounded-lg transition-all cursor-pointer
+              ${selectedChannel === null
+                ? 'bg-gradient-to-b from-blue-700 to-blue-900 ring-2 ring-blue-400' 
+                : 'bg-gradient-to-b from-slate-700 to-slate-800 hover:from-slate-650 hover:to-slate-750'
+              }
+              border-2 ${selectedChannel === null ? 'border-blue-500' : 'border-slate-600'}`}
             onClick={handleMasterClick}
           >
+            {/* Master Header */}
+            <div className="p-3 border-b border-slate-600 text-center">
+              <div className="w-2 h-2 rounded-full mx-auto mb-2 bg-gradient-to-r from-purple-500 to-blue-500" style={{boxShadow: '0 0 8px rgba(147, 51, 234, 0.8)'}} />
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                Master
+              </span>
+            </div>
+
+            {/* Master dB Display */}
+            <div className="px-3 py-2 text-center border-b border-slate-600/50">
+              <div className="text-[11px] font-mono font-bold text-blue-400 tabular-nums">
+                {volumeToDB(volumes.master)}
+              </div>
+              <div className="text-[9px] text-slate-500">dB</div>
+            </div>
+
+            {/* Master Fader */}
+            <div className="px-2 py-4 flex-1 flex items-center justify-center">
+              <div className="relative flex items-center justify-center">
+                {/* dB Scale */}
+                <div className="absolute -left-6 h-full flex flex-col justify-between text-[8px] text-slate-600 font-mono">
+                  <span>10</span>
+                  <span>0</span>
+                  <span>-6</span>
+                  <span>-12</span>
+                  <span>-24</span>
+                  <span>-∞</span>
+                </div>
+                
+                <div className="h-56">
+                  <Slider
+                    value={[volumes.master]}
+                    min={0}
+                    max={100}
+                    step={1}
+                    orientation="vertical"
+                    onValueChange={handleMasterVolumeChange}
+                    disabled={isLoading}
+                    className="h-full"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Master Volume Readout */}
+            <div className="px-2 py-2 text-center border-t border-slate-600/50">
+              <div className="text-xs font-mono font-bold text-slate-200 tabular-nums">
+                {volumes.master}
+              </div>
+            </div>
+
+            {/* VU Meter Placeholder */}
+            <div className="p-2">
+              <div className="w-full h-12 bg-slate-950 rounded border border-slate-700 flex items-center justify-center">
+                <div className="text-[9px] text-slate-600 font-bold">VU</div>
+              </div>
+            </div>
+
             {/* Master Label */}
-            <div className="text-center">
-              <div className="w-3 h-3 rounded-full mx-auto mb-1 bg-gradient-to-r from-purple-500 to-blue-500" />
-              <span className="text-xs font-bold">MASTER</span>
-            </div>
-
-            {/* Vertical Master Fader */}
-            <div className="h-48 flex items-center">
-              <Slider
-                value={[volumes.master]}
-                min={0}
-                max={100}
-                step={1}
-                orientation="vertical"
-                onValueChange={handleMasterVolumeChange}
-                disabled={isLoading}
-                className="h-full"
-              />
-            </div>
-
-            {/* Master Volume Display */}
-            <div className="text-xs font-mono font-bold tabular-nums min-w-[40px] text-center">
-              {volumes.master}
-            </div>
-
-            {/* VU Meter placeholder */}
-            <div className="w-full h-14 bg-black/10 dark:bg-white/10 rounded flex items-end justify-center p-1">
-              <div className="text-xs text-muted-foreground">VU</div>
+            <div className="px-2 py-1.5 text-center border-t border-slate-600 bg-gradient-to-r from-purple-900/30 to-blue-900/30">
+              <span className="text-[10px] font-bold text-blue-400 tracking-wide">
+                MASTER
+              </span>
             </div>
           </div>
         </div>
@@ -496,20 +588,20 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
         {/* Loading State */}
         {isLoading && (
           <div className="flex items-center justify-center py-8">
-            <div className="text-sm text-muted-foreground animate-pulse">
-              Loading mixer...
+            <div className="text-sm text-slate-400 animate-pulse">
+              Initializing mixer...
             </div>
           </div>
         )}
 
         {/* Info */}
         {!isLoading && (
-          <div className="space-y-2 text-xs text-muted-foreground pt-4 border-t">
+          <div className="space-y-1 text-[10px] text-slate-500 pt-4 border-t border-slate-800">
             <p className="text-center">
-              💡 <strong>Click a channel</strong> to see its waveform above • <strong>S</strong> = Solo • <strong>M</strong> = Mute
+              <strong className="text-slate-400">TIP:</strong> Click channel to view waveform • S=Solo • M=Mute • Click master to return
             </p>
             <p className="text-center">
-              Your mix settings are for preview only and won&apos;t affect the download.
+              Mix settings are for preview only • Download contains original stems
             </p>
           </div>
         )}
