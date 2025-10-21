@@ -335,6 +335,28 @@ export default function JobDetailPage() {
                 <p className="font-medium capitalize">{job.quality_mode}</p>
               </div>
 
+              {/* Trim Info */}
+              {(job.trim_start !== null && job.trim_end !== null) && (
+                <div className="col-span-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-md border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      ✂️ Audio Trimmed
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <span className="text-muted-foreground">
+                      Start: <span className="font-mono font-semibold">{Math.floor(job.trim_start! / 60)}:{(job.trim_start! % 60).toFixed(0).padStart(2, '0')}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      End: <span className="font-mono font-semibold">{Math.floor(job.trim_end! / 60)}:{(job.trim_end! % 60).toFixed(0).padStart(2, '0')}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      Duration: <span className="font-mono font-semibold">{Math.floor((job.trim_end! - job.trim_start!) / 60)}:{((job.trim_end! - job.trim_start!) % 60).toFixed(0).padStart(2, '0')}</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {job.detected_bpm && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-muted-foreground">

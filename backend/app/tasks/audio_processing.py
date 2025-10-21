@@ -161,7 +161,21 @@ def process_audio_job(self, job_id: str):
             final_bpm
         )
         
-        # 7. Create final package and upload
+        # 7. Save stems to permanent storage
+        update_job_status(job_id, "PACKAGING", 88, redis_client)
+        permanent_stems_dir = os.path.join(
+            settings.LOCAL_STORAGE_PATH,
+            "stems",
+            str(job_id)
+        )
+        os.makedirs(permanent_stems_dir, exist_ok=True)
+        
+        # Copy stems to permanent location
+        import shutil
+        for stem_file in Path(stems_dir).glob("*.wav"):
+            shutil.copy2(stem_file, os.path.join(permanent_stems_dir, stem_file.name))
+        
+        # 8. Create final package and upload
         update_job_status(job_id, "PACKAGING", 92, redis_client)
         package_path = os.path.join(temp_dir, f"{job.project_name}_RehearseKit.zip")
         audio_service.create_package(stems_dir, dawproject_path, package_path, final_bpm)
@@ -182,7 +196,7 @@ def process_audio_job(self, job_id: str):
                     status="COMPLETED",
                     progress_percent=100,
                     package_path=final_package_path,
-                    stems_folder_path=str(stems_dir),
+                    stems_folder_path=permanent_stems_dir,
                     completed_at=datetime.utcnow()
                 )
                 await db.execute(stmt)

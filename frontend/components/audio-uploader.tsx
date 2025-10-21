@@ -308,8 +308,15 @@ export function AudioUploader() {
 
       {/* Audio Preview Waveform */}
       {audioPreviewUrl && (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Audio Preview</label>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Audio Preview</label>
+            {trimStart !== null && trimEnd !== null && (
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                ✂️ Trim active: Only selected region will be processed
+              </span>
+            )}
+          </div>
           <AudioWaveform 
             audioUrl={audioPreviewUrl} 
             showControls={true} 
@@ -319,6 +326,11 @@ export function AudioUploader() {
               setTrimEnd(end);
             }}
           />
+          {trimStart !== null && trimEnd !== null && (
+            <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded text-xs text-blue-900 dark:text-blue-100 border border-blue-200 dark:border-blue-800">
+              💡 <strong>Tip:</strong> The selected region ({Math.floor((trimEnd - trimStart) / 60)}:{((trimEnd - trimStart) % 60).toFixed(0).padStart(2, '0')} duration) will be extracted and processed. The rest will be discarded.
+            </div>
+          )}
         </div>
       )}
 
