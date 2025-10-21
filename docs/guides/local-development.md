@@ -38,9 +38,29 @@ Access the application:
 
 ### 1. Environment Configuration
 
-The project uses environment variables for configuration. For local development, these are set in `docker-compose.yml`.
+The project uses environment variables for configuration. For local development with Docker Compose, most variables are pre-configured in `docker-compose.yml`.
 
-No additional `.env` files are needed for Docker Compose setup.
+#### Optional: Authentication Setup
+
+To enable Google OAuth authentication (optional for development):
+
+1. **Create `.env` files** (see `config/.env.example` for reference):
+   ```bash
+   # Backend: backend/.env
+   JWT_SECRET_KEY=dev-secret-key-at-least-32-chars-long
+   GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=your-client-secret
+   ADMIN_EMAIL=your@email.com
+   
+   # Frontend: frontend/.env.local
+   NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   ```
+
+2. **Set up Google OAuth**:
+   - See [Authentication Guide](authentication.md) for detailed setup
+   - Or skip this step - authentication is optional for development
+
+**Note**: The app works without authentication configured. Users can create jobs anonymously.
 
 ### 2. Frontend Development
 

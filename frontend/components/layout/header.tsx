@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Music2 } from "lucide-react";
+import { Music2, LogIn } from "lucide-react";
 import { cn } from "@/utils/utils";
+import { useAuth } from "@/contexts/auth-context";
+import { UserMenu } from "@/components/auth/user-menu";
+import { LoginDialog } from "@/components/auth/login-dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export function Header() {
   const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -37,13 +44,35 @@ export function Header() {
             </Link>
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
+        <div className="flex flex-1 items-center justify-end space-x-4">
           <div className="flex items-center gap-2">
             <div className="h-2 w-2 rounded-full bg-kit-success animate-pulse-slow" title="All systems operational" />
             <span className="text-xs text-muted-foreground hidden sm:inline">Operational</span>
           </div>
+          
+          {/* Auth Section */}
+          {!isLoading && (
+            <>
+              {isAuthenticated ? (
+                <UserMenu />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLoginOpen(true)}
+                  className="gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  <span className="hidden sm:inline">Sign In</span>
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
+      
+      {/* Login Dialog */}
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
     </header>
   );
 }

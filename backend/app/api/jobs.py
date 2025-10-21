@@ -6,6 +6,7 @@ from typing import Optional
 from uuid import UUID
 from app.core.database import get_db
 from app.models.job import Job, JobStatus, InputType, QualityMode
+from app.models.user import User
 from app.schemas.job import JobResponse, JobListResponse, JobCreate
 from app.tasks.audio_processing import process_audio_job
 from app.services.storage import StorageService
@@ -14,6 +15,12 @@ import os
 import aiofiles
 
 router = APIRouter()
+
+# Import optional auth dependency
+def get_current_user_optional_for_jobs():
+    """Lazy import to avoid circular dependency"""
+    from app.api.auth import get_current_user_optional
+    return get_current_user_optional
 
 
 @router.post("/create", response_model=JobResponse)
@@ -28,8 +35,9 @@ async def create_job(
     trim_end: Optional[float] = Form(None),
     file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional_for_jobs()),
 ):
-    """Create a new audio processing job"""
+    """Create a new audio processing job (supports both authenticated and anonymous users)"""
     
     from app.core.database import get_redis
     from app.services.youtube_preview import YouTubePreviewService
@@ -60,6 +68,7 @@ async def create_job(
         trim_start=trim_start,
         trim_end=trim_end,
         status=JobStatus.PENDING,
+        user_id=current_user.id if current_user else None,  # Associate with user if authenticated
     )
     
     db.add(job)

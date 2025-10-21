@@ -1,9 +1,10 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Integer, Float, Text, DateTime, Enum
+from sqlalchemy import Column, String, Integer, Float, Text, DateTime, Enum, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -35,6 +36,9 @@ class Job(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     status = Column(Enum(JobStatus), default=JobStatus.PENDING, nullable=False)
     
+    # User relationship (nullable for backward compatibility)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='SET NULL'), nullable=True, index=True)
+    
     # Input configuration
     input_type = Column(Enum(InputType), nullable=False)
     input_url = Column(String, nullable=True)  # For YouTube URLs
@@ -58,6 +62,9 @@ class Job(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     completed_at = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    # user = relationship("User", backref="jobs")  # Uncomment when User model is imported
     
     def __repr__(self):
         return f"<Job(id={self.id}, name={self.project_name}, status={self.status})>"

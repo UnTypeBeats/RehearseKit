@@ -119,10 +119,22 @@ class ApiClient {
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
+    // Import auth headers dynamically to avoid circular dependency
+    let authHeaders = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const { getAuthHeaders } = require('./auth');
+        authHeaders = getAuthHeaders();
+      } catch (e) {
+        // Auth module not loaded yet, continue without auth
+      }
+    }
+    
     const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
+        ...authHeaders,
         ...options.headers,
       },
     });
@@ -184,9 +196,21 @@ class ApiClient {
       formData.append("trim_end", data.trim_end.toString());
     }
 
+    // Get auth headers if available
+    let authHeaders = {};
+    if (typeof window !== 'undefined') {
+      try {
+        const { getAuthHeaders } = require('./auth');
+        authHeaders = getAuthHeaders();
+      } catch (e) {
+        // Auth module not loaded yet, continue without auth
+      }
+    }
+
     const response = await fetch(`${this.baseUrl}/api/jobs/create`, {
       method: "POST",
       body: formData,
+      headers: authHeaders, // Include auth headers for FormData too
       // Don't set Content-Type - browser will set it with boundary for FormData
     });
 

@@ -43,6 +43,20 @@ class Settings(BaseSettings):
     # Job retention
     JOB_RETENTION_DAYS: int = 7
     
+    # JWT Authentication
+    JWT_SECRET_KEY: str = "dev-secret-key-change-in-production-at-least-32-chars-long"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    
+    # Google OAuth
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/callback/google"
+    
+    # Admin Configuration
+    ADMIN_EMAIL: str = "oleg@befeast.com"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
