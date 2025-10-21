@@ -47,6 +47,8 @@ export interface Job {
   quality_mode: "fast" | "high";
   detected_bpm?: number;
   manual_bpm?: number;
+  trim_start?: number;
+  trim_end?: number;
   progress_percent: number;
   error_message?: string;
   source_file_path?: string;
@@ -74,6 +76,8 @@ export interface CreateJobRequest {
   input_url?: string;
   youtube_preview_id?: string;
   manual_bpm?: number;
+  trim_start?: number;
+  trim_end?: number;
 }
 
 export interface YouTubePreviewRequest {

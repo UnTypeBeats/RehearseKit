@@ -245,7 +245,9 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
               {/* Waveform */}
               <div
-                ref={(el) => (containerRefs.current[stemType] = el)}
+                ref={(el) => {
+                  containerRefs.current[stemType] = el;
+                }}
                 className="w-full opacity-60 hover:opacity-100 transition-opacity"
               />
 

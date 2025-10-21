@@ -15,9 +15,19 @@ interface AudioWaveformProps {
   onTrimChange?: (start: number, end: number) => void;
 }
 
+interface Region {
+  id: string;
+  start: number;
+  end: number;
+  drag: boolean;
+  resize: boolean;
+  color: string;
+}
+
 export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTrimming = false, onTrimChange }: AudioWaveformProps) {
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurfer = useRef<WaveSurfer | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const regionsPlugin = useRef<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -113,7 +123,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
     });
 
     // Region event listeners
-    regionsPlugin.current?.on('region-updated', (region: any) => {
+    regionsPlugin.current?.on('region-updated', (region: Region) => {
       setTrimStart(region.start);
       setTrimEnd(region.end);
       if (onTrimChange) {
@@ -121,7 +131,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
       }
     });
 
-    regionsPlugin.current?.on('region-created', (region: any) => {
+    regionsPlugin.current?.on('region-created', (region: Region) => {
       setTrimStart(region.start);
       setTrimEnd(region.end);
       if (onTrimChange) {
