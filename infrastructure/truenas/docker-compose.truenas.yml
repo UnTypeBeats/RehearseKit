@@ -91,7 +91,7 @@ services:
     ports:
       - "${WEBSOCKET_PORT:-8001}:8001"
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
     networks:
       - rehearsekit-network
     # No depends_on for Redis since it's external

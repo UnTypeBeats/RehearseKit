@@ -121,11 +121,11 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
         setDuration(longestDuration);
         
-        // Initialize master waveform with first available stem
+        // Initialize master waveform
         if (masterWaveformRef.current && longestDuration > 0) {
           masterWavesurfer.current = WaveSurfer.create({
             container: masterWaveformRef.current,
-            waveColor: '#7C3AED',
+            waveColor: '#7C3AED40',
             progressColor: '#2563EB',
             cursorColor: '#2563EB',
             height: 100,
@@ -136,12 +136,9 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
             interact: false, // Read-only, just for visualization
           });
 
-          // Load first available stem to show waveform
-          const firstStem = stemTypes.find(type => tracks[type].buffer);
-          if (firstStem) {
-            const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/${firstStem}`;
-            await masterWavesurfer.current.load(stemUrl);
-          }
+          // Load vocals stem by default to show master mix waveform
+          const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/vocals`;
+          await masterWavesurfer.current.load(stemUrl);
         }
 
         setIsLoading(false);
@@ -262,11 +259,29 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
   };
 
   const handleChannelSelect = async (stemType: StemType) => {
-    setSelectedChannel(stemType);
-    
-    // Update master waveform to show selected channel
+    // Toggle selection - click again to deselect
+    if (selectedChannel === stemType) {
+      setSelectedChannel(null);
+      // Go back to master (vocals) waveform
+      if (masterWavesurfer.current) {
+        const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/vocals`;
+        masterWavesurfer.current.load(stemUrl);
+      }
+    } else {
+      setSelectedChannel(stemType);
+      // Update master waveform to show selected channel
+      if (masterWavesurfer.current) {
+        const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/${stemType}`;
+        masterWavesurfer.current.load(stemUrl);
+      }
+    }
+  };
+
+  const handleMasterClick = () => {
+    setSelectedChannel(null);
+    // Show master (vocals) waveform
     if (masterWavesurfer.current) {
-      const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/${stemType}`;
+      const stemUrl = `${apiUrl}/api/jobs/${jobId}/stems/vocals`;
       masterWavesurfer.current.load(stemUrl);
     }
   };
@@ -438,7 +453,14 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
           })}
 
           {/* Master Channel Strip */}
-          <div className="flex flex-col items-center space-y-3 p-3 rounded-lg bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-400 dark:border-slate-600">
+          <div 
+            className={`flex flex-col items-center space-y-3 p-3 rounded-lg transition-all cursor-pointer ${
+              selectedChannel === null
+                ? 'bg-gradient-to-b from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-950 border-2 border-blue-500'
+                : 'bg-gradient-to-b from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 border-2 border-slate-400 dark:border-slate-600'
+            }`}
+            onClick={handleMasterClick}
+          >
             {/* Master Label */}
             <div className="text-center">
               <div className="w-3 h-3 rounded-full mx-auto mb-1 bg-gradient-to-r from-purple-500 to-blue-500" />

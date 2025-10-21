@@ -111,24 +111,23 @@ export default function JobDetailPage() {
     
     setIsReprocessing(true);
     try {
-      const response = await fetch(`${getApiUrl()}/api/jobs/${jobId}/reprocess`, {
+      const response = await fetch(`${getApiUrl()}/api/jobs/${jobId}/reprocess?quality_mode=high`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          quality_mode: "high",
-        }),
       });
 
       if (response.ok) {
         const newJob = await response.json();
+        console.log("Reprocess created new job:", newJob);
+        // Navigate to new job
         router.push(`/jobs/${newJob.id}`);
       } else {
-        console.error("Failed to reprocess job");
+        const errorText = await response.text();
+        console.error("Failed to reprocess job:", response.status, errorText);
+        alert(`Failed to reprocess: ${errorText}`);
       }
     } catch (error) {
       console.error("Failed to reprocess job:", error);
+      alert(`Error reprocessing job: ${error}`);
     } finally {
       setIsReprocessing(false);
     }
