@@ -4,14 +4,14 @@
  * Google OAuth Callback Page
  * Handles the redirect from Google OAuth
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { AuthTokens } from '@/utils/auth';
 import { getApiUrl } from '@/utils/api';
 import { Loader2 } from 'lucide-react';
 
-export default function GoogleCallbackPage() {
+function GoogleCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -87,6 +87,22 @@ export default function GoogleCallbackPage() {
         <p className="text-muted-foreground">Please wait while we authenticate you</p>
       </div>
     </div>
+  );
+}
+
+export default function GoogleCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">Loading...</h1>
+          <p className="text-muted-foreground">Please wait</p>
+        </div>
+      </div>
+    }>
+      <GoogleCallbackContent />
+    </Suspense>
   );
 }
 
