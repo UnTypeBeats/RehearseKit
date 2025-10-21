@@ -6,15 +6,22 @@ const getApiUrl = () => {
       return window.location.origin;
     }
     
-    // HTTP with port 30070 (TrueNAS) → use port 30071 (backend)
-    if (window.location.port === '30070') {
-      return `${window.location.protocol}//${window.location.hostname}:30071`;
+    // HTTP → calculate API port from frontend port
+    const frontendPort = parseInt(window.location.port || '80');
+    
+    // For standard ports (3000, 30070, etc), API is typically frontend_port + 1
+    // Or use configured offset/mapping
+    let apiPort: number;
+    
+    if (frontendPort === 3000) {
+      apiPort = 8000; // Local dev convention
+    } else if (frontendPort >= 30000) {
+      apiPort = frontendPort + 1; // TrueNAS convention (30070 → 30071)
+    } else {
+      apiPort = frontendPort + 1; // Default: next port
     }
     
-    // HTTP with port 3000 (local dev) → use port 8000 (dev backend)
-    if (window.location.port === '3000') {
-      return `${window.location.protocol}//${window.location.hostname}:8000`;
-    }
+    return `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
   }
   
   // Fallback

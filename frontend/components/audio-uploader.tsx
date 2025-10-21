@@ -49,15 +49,15 @@ export function AudioUploader() {
       setYoutubeTitle(preview.title);
       setYoutubeThumbnail(preview.thumbnail || null);
       
-      // Use smart URL - port-based detection
+      // Calculate API URL from frontend port
       let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       if (typeof window !== 'undefined') {
         if (window.location.protocol === 'https:') {
           baseUrl = window.location.origin;
-        } else if (window.location.port === '30070') {
-          baseUrl = `${window.location.protocol}//${window.location.hostname}:30071`;
-        } else if (window.location.port === '3000') {
-          baseUrl = `${window.location.protocol}//${window.location.hostname}:8000`;
+        } else {
+          const frontendPort = parseInt(window.location.port || '80');
+          const apiPort = frontendPort === 3000 ? 8000 : (frontendPort >= 30000 ? frontendPort + 1 : frontendPort + 1);
+          baseUrl = `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
         }
       }
       
