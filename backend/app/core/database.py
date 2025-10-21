@@ -1,15 +1,16 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
+from redis import Redis
 from app.core.config import settings
 
-# Create async engine
+# SQLAlchemy async engine
 engine = create_async_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
+    echo=False,
+    pool_pre_ping=True,
 )
 
-# Create session factory
+# Session factory
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -20,15 +21,16 @@ AsyncSessionLocal = async_sessionmaker(
 Base = declarative_base()
 
 
+# Dependency to get DB session
 async def get_db():
-    """Dependency for getting database session"""
     async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+        yield session
 
+
+# Redis client (for YouTube previews and Celery)
+redis_client = Redis.from_url(settings.REDIS_URL, decode_responses=True)
+
+
+# Dependency to get Redis
+def get_redis():
+    return redis_client

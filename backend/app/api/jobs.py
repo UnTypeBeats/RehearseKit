@@ -22,11 +22,15 @@ async def create_job(
     quality_mode: str = Form("fast"),
     input_type: Optional[str] = Form(None),
     input_url: Optional[str] = Form(None),
+    youtube_preview_id: Optional[str] = Form(None),
     manual_bpm: Optional[float] = Form(None),
     file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new audio processing job"""
+    
+    from app.core.database import get_redis
+    from app.services.youtube_preview import YouTubePreviewService
     
     # Determine input type
     if file:
@@ -65,6 +69,31 @@ async def create_job(
         job.source_file_path = file_path
         await db.commit()
         await db.refresh(job)
+    
+    # Handle YouTube preview (file already downloaded)
+    elif youtube_preview_id:
+        import shutil
+        redis = get_redis()
+        youtube_service = YouTubePreviewService(redis)
+        preview_file = youtube_service.get_preview_file_path(youtube_preview_id)
+        
+        if preview_file and os.path.exists(preview_file):
+            # Move preview file to permanent storage
+            storage = StorageService()
+            dest_path = os.path.join(
+                settings.LOCAL_STORAGE_PATH,
+                "uploads",
+                f"{job.id}_source.wav"
+            )
+            os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+            shutil.copy2(preview_file, dest_path)
+            
+            job.source_file_path = dest_path
+            await db.commit()
+            await db.refresh(job)
+            
+            # Cleanup preview
+            youtube_service.cleanup_preview(youtube_preview_id)
     
     # Queue processing task
     process_audio_job.delay(str(job.id))
@@ -172,6 +201,38 @@ async def delete_job(
     await db.commit()
     
     return {"message": "Job deleted successfully"}
+
+
+@router.get("/{job_id}/source")
+async def get_source_audio(
+    job_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get the source audio file for preview"""
+    
+    query = select(Job).where(Job.id == job_id)
+    result = await db.execute(query)
+    job = result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if not job.source_file_path:
+        raise HTTPException(status_code=404, detail="Source file not found")
+    
+    # For local mode, serve the file directly
+    if settings.STORAGE_MODE == "local":
+        if not os.path.exists(job.source_file_path):
+            raise HTTPException(status_code=404, detail="Source file not found on disk")
+        
+        return FileResponse(
+            path=job.source_file_path,
+            media_type="audio/mpeg",  # Browser can handle multiple audio types
+            filename=f"{job.project_name}_source.wav"
+        )
+    else:
+        # For GCS mode, generate signed URL
+        raise HTTPException(status_code=501, detail="GCS source preview not implemented")
 
 
 @router.get("/{job_id}/download")

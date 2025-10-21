@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -11,13 +11,28 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Download, Clock, Music2, Gauge } from "lucide-react";
+import { ArrowLeft, Download, Clock, Music2, Gauge, X, Trash2 } from "lucide-react";
 import { getStatusBadgeVariant } from "@/lib/utils";
+import { AudioWaveform } from "@/components/audio-waveform";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function JobDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const jobId = params.id as string;
   const queryClient = useQueryClient();
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const { data: initialJob, isLoading, error } = useQuery({
     queryKey: ["job", jobId],
@@ -58,6 +73,38 @@ export default function JobDetailPage() {
       socket.disconnect();
     };
   }, [jobId, job?.status, queryClient]);
+
+  const handleCancel = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}/cancel`, {
+        method: "POST",
+      });
+
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["job", jobId] });
+        setShowCancelDialog(false);
+      }
+    } catch (error) {
+      console.error("Failed to cancel job:", error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/api/jobs/${jobId}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setShowDeleteDialog(false);
+        router.push("/jobs");
+      }
+    } catch (error) {
+      console.error("Failed to delete job:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -102,6 +149,65 @@ export default function JobDetailPage() {
           <Badge variant={getStatusBadgeVariant(job.status)} className="text-sm">
             {job.status}
           </Badge>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            {/* Cancel button for in-progress jobs */}
+            {!["COMPLETED", "FAILED", "CANCELLED"].includes(job.status) && (
+              <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel Job</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to cancel &ldquo;{job.project_name}&rdquo;? 
+                      This will stop the processing and cannot be undone.
+                      Progress will be lost and you&apos;ll need to start over.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Processing</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleCancel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Cancel Job
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            
+            {/* Delete button for finished jobs */}
+            {["COMPLETED", "FAILED", "CANCELLED"].includes(job.status) && (
+              <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Job</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete &ldquo;{job.project_name}&rdquo;? 
+                      This will permanently remove the job and all associated files.
+                      Downloaded files on your computer will not be affected.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Job</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete Permanently
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
 
         {/* Progress Card */}
@@ -118,6 +224,59 @@ export default function JobDetailPage() {
                   Status: {job.status.toLowerCase().replace("_", " ")}
                 </span>
                 <span className="font-medium">{job.progress_percent}%</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Source Audio Preview */}
+        {job.source_file_path && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Source Audio</CardTitle>
+              <CardDescription>
+                {job.input_type === "upload" ? "Original uploaded file" : "Downloaded from YouTube"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* YouTube metadata */}
+              {job.input_type === "youtube" && job.input_url && (
+                <div className="flex items-start gap-3 pb-3 border-b">
+                  <a 
+                    href={job.input_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img 
+                      src={`https://img.youtube.com/vi/${job.input_url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`}
+                      alt="YouTube thumbnail"
+                      className="w-40 h-24 object-cover rounded hover:opacity-80 transition"
+                    />
+                  </a>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm mb-1">{job.project_name}</h4>
+                    <a
+                      href={job.input_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-kit-blue hover:underline break-all"
+                    >
+                      {job.input_url}
+                    </a>
+                  </div>
+                </div>
+              )}
+              
+              {/* Waveform */}
+              <div>
+                <AudioWaveform 
+                  audioUrl={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/jobs/${job.id}/source`}
+                  showControls={true}
+                />
+                <p className="text-xs text-muted-foreground mt-2 text-center">
+                  Press spacebar to play/pause
+                </p>
               </div>
             </CardContent>
           </Card>

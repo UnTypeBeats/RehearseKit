@@ -49,7 +49,20 @@ export interface CreateJobRequest {
   quality_mode: "fast" | "high";
   input_type: "upload" | "youtube";
   input_url?: string;
+  youtube_preview_id?: string;
   manual_bpm?: number;
+}
+
+export interface YouTubePreviewRequest {
+  url: string;
+}
+
+export interface YouTubePreviewResponse {
+  preview_id: string;
+  preview_url: string;
+  title: string;
+  duration: number;
+  thumbnail?: string;
 }
 
 export interface JobListResponse {
@@ -116,8 +129,13 @@ class ApiClient {
     
     if (data.input_type === "upload" && file) {
       formData.append("file", file);
-    } else if (data.input_type === "youtube" && data.input_url) {
-      formData.append("input_url", data.input_url);
+    } else if (data.input_type === "youtube") {
+      if (data.input_url) {
+        formData.append("input_url", data.input_url);
+      }
+      if (data.youtube_preview_id) {
+        formData.append("youtube_preview_id", data.youtube_preview_id);
+      }
     }
     
     if (data.manual_bpm) {
@@ -179,6 +197,13 @@ class ApiClient {
 
   async healthCheck(): Promise<{ status: string; [key: string]: string }> {
     return this.request<{ status: string; [key: string]: string }>("/api/health");
+  }
+
+  async createYouTubePreview(url: string): Promise<YouTubePreviewResponse> {
+    return this.request<YouTubePreviewResponse>("/api/youtube/preview", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    });
   }
 }
 

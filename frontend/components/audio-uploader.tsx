@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AudioWaveform } from "@/components/audio-waveform";
 
 export function AudioUploader() {
   const [inputType, setInputType] = useState<"upload" | "youtube">("upload");
@@ -16,17 +17,66 @@ export function AudioUploader() {
   const [qualityMode, setQualityMode] = useState<"fast" | "high">("fast");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
+  
+  // YouTube preview state
+  const [youtubePreviewId, setYoutubePreviewId] = useState<string | null>(null);
+  const [youtubeTitle, setYoutubeTitle] = useState<string>("");
+  const [youtubeThumbnail, setYoutubeThumbnail] = useState<string | null>(null);
+  const [isLoadingYouTube, setIsLoadingYouTube] = useState(false);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
+  const { toast} = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch YouTube preview
+  const fetchYouTube = async () => {
+    if (!youtubeUrl) {
+      toast({
+        title: "Missing URL",
+        description: "Please enter a YouTube URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingYouTube(true);
+    
+    try {
+      const preview = await apiClient.createYouTubePreview(youtubeUrl);
+      
+      setYoutubePreviewId(preview.preview_id);
+      setYoutubeTitle(preview.title);
+      setYoutubeThumbnail(preview.thumbnail || null);
+      setAudioPreviewUrl(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}${preview.preview_url}`);
+      
+      // Auto-fill project name if empty
+      if (!projectName) {
+        setProjectName(preview.title);
+      }
+      
+      toast({
+        title: "YouTube audio loaded",
+        description: `Ready to process: ${preview.title}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to load YouTube audio",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingYouTube(false);
+    }
+  };
 
   const createJobMutation = useMutation({
     mutationFn: async () => {
       if (inputType === "upload" && !file) {
         throw new Error("Please select a file");
       }
-      if (inputType === "youtube" && !youtubeUrl) {
-        throw new Error("Please enter a YouTube URL");
+      if (inputType === "youtube" && !youtubePreviewId) {
+        throw new Error("Please fetch YouTube audio first");
       }
       if (!projectName) {
         throw new Error("Please enter a project name");
@@ -38,6 +88,7 @@ export function AudioUploader() {
           quality_mode: qualityMode,
           input_type: inputType,
           input_url: inputType === "youtube" ? youtubeUrl : undefined,
+          youtube_preview_id: inputType === "youtube" ? youtubePreviewId! : undefined,
         },
         inputType === "upload" ? file! : undefined
       );
@@ -93,6 +144,10 @@ export function AudioUploader() {
         const nameWithoutExt = droppedFile.name.replace(/\.(flac|mp3|wav)$/i, "");
         setProjectName(nameWithoutExt);
       }
+      
+      // Create preview URL for waveform
+      const previewUrl = URL.createObjectURL(droppedFile);
+      setAudioPreviewUrl(previewUrl);
     } else {
       toast({
         title: "Invalid file",
@@ -106,9 +161,14 @@ export function AudioUploader() {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
+      setInputType("upload");
       if (!projectName) {
-        setProjectName(selectedFile.name.replace(".flac", ""));
+        setProjectName(selectedFile.name.replace(/\.(flac|mp3|wav)$/i, ""));
       }
+      
+      // Create preview URL for waveform
+      const previewUrl = URL.createObjectURL(selectedFile);
+      setAudioPreviewUrl(previewUrl);
     }
   };
 
@@ -176,18 +236,72 @@ export function AudioUploader() {
       )}
 
       {/* YouTube URL Input */}
-      {inputType === "youtube" && (
-        <div className="space-y-2">
+      {inputType === "youtube" && !youtubePreviewId && (
+        <div className="space-y-3">
           <label htmlFor="youtube-url" className="text-sm font-medium">
             YouTube URL
           </label>
-          <Input
-            id="youtube-url"
-            type="url"
-            placeholder="https://www.youtube.com/watch?v=..."
-            value={youtubeUrl}
-            onChange={(e) => setYoutubeUrl(e.target.value)}
-          />
+          <div className="flex gap-2">
+            <Input
+              id="youtube-url"
+              type="url"
+              placeholder="https://www.youtube.com/watch?v=..."
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              disabled={isLoadingYouTube}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              onClick={fetchYouTube}
+              disabled={!youtubeUrl || isLoadingYouTube}
+            >
+              {isLoadingYouTube ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Fetching...
+                </>
+              ) : (
+                "Fetch Audio"
+              )}
+            </Button>
+          </div>
+          {isLoadingYouTube && (
+            <p className="text-xs text-muted-foreground">
+              Downloading YouTube audio... This may take 10-30 seconds.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* YouTube Preview Card */}
+      {inputType === "youtube" && youtubePreviewId && (
+        <Card className="border-kit-blue">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              {youtubeThumbnail && (
+                <img 
+                  src={youtubeThumbnail} 
+                  alt={youtubeTitle}
+                  className="w-32 h-20 object-cover rounded"
+                />
+              )}
+              <div className="flex-1">
+                <h3 className="font-semibold text-sm">{youtubeTitle}</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  YouTube video loaded and ready to process
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Audio Preview Waveform */}
+      {audioPreviewUrl && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Audio Preview</label>
+          <AudioWaveform audioUrl={audioPreviewUrl} showControls={true} />
         </div>
       )}
 
@@ -239,7 +353,11 @@ export function AudioUploader() {
         className="w-full"
         size="lg"
         onClick={() => createJobMutation.mutate()}
-        disabled={createJobMutation.isPending}
+        disabled={
+          createJobMutation.isPending ||
+          (inputType === "upload" && !file) ||
+          (inputType === "youtube" && !youtubePreviewId)
+        }
       >
         {createJobMutation.isPending ? (
           <>
@@ -250,6 +368,12 @@ export function AudioUploader() {
           "Start Processing"
         )}
       </Button>
+      
+      {inputType === "youtube" && !youtubePreviewId && (
+        <p className="text-xs text-center text-muted-foreground">
+          Click "Fetch Audio" first to preview YouTube video
+        </p>
+      )}
     </div>
   );
 }
