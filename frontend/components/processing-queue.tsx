@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api";
+import { apiClient } from "@/utils/api";
 import { JobCard } from "./job-card";
 import { Loader2 } from "lucide-react";
 

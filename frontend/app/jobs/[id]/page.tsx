@@ -5,14 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { apiClient, type Job } from "@/lib/api";
-import { JobProgressSocket, type JobProgressUpdate } from "@/lib/websocket";
+import { apiClient, type Job } from "@/utils/api";
+import { JobProgressSocket, type JobProgressUpdate } from "@/utils/websocket";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Clock, Music2, Gauge, X, Trash2 } from "lucide-react";
-import { getStatusBadgeVariant } from "@/lib/utils";
+import { getStatusBadgeVariant } from "@/utils/utils";
 import { AudioWaveform } from "@/components/audio-waveform";
 import {
   AlertDialog,

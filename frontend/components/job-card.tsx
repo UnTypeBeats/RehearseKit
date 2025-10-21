@@ -19,9 +19,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { type Job } from "@/lib/api";
-import { JobProgressSocket, type JobProgressUpdate } from "@/lib/websocket";
-import { getStatusBadgeVariant } from "@/lib/utils";
+import { type Job } from "@/utils/api";
+import { JobProgressSocket, type JobProgressUpdate } from "@/utils/websocket";
+import { getStatusBadgeVariant } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Helper function to get user-friendly status messages

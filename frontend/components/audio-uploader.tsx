@@ -5,7 +5,7 @@ import { Upload, Youtube, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiClient } from "@/lib/api";
+import { apiClient } from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AudioWaveform } from "@/components/audio-waveform";

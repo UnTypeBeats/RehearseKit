@@ -28,7 +28,8 @@ const getApiUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 };
 
-const API_URL = getApiUrl();
+// Getter function - evaluates at runtime, not build time
+const getAPI_URL = () => getApiUrl();
 
 export interface Job {
   id: string;
@@ -88,10 +89,14 @@ export interface JobListResponse {
 }
 
 class ApiClient {
-  private baseUrl: string;
+  private getBaseUrl: () => string;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  constructor(getBaseUrl: () => string) {
+    this.getBaseUrl = getBaseUrl;
+  }
+
+  private get baseUrl(): string {
+    return this.getBaseUrl();
   }
 
   private async request<T>(
@@ -222,5 +227,5 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_URL);
+export const apiClient = new ApiClient(getAPI_URL);
 
