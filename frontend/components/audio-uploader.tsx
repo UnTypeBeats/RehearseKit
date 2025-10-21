@@ -5,7 +5,7 @@ import { Upload, Youtube, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { apiClient } from "@/utils/api";
+import { apiClient, getApiUrl } from "@/utils/api";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AudioWaveform } from "@/components/audio-waveform";
@@ -49,18 +49,8 @@ export function AudioUploader() {
       setYoutubeTitle(preview.title);
       setYoutubeThumbnail(preview.thumbnail || null);
       
-      // Calculate API URL from frontend port
-      let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      if (typeof window !== 'undefined') {
-        if (window.location.protocol === 'https:') {
-          baseUrl = window.location.origin;
-        } else {
-          const frontendPort = parseInt(window.location.port || '80');
-          const apiPort = frontendPort === 3000 ? 8000 : (frontendPort >= 30000 ? frontendPort + 1 : frontendPort + 1);
-          baseUrl = `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
-        }
-      }
-      
+      // Get API URL with runtime detection
+      const baseUrl = getApiUrl();
       setAudioPreviewUrl(`${baseUrl}${preview.preview_url}`);
       
       // Auto-fill project name if empty

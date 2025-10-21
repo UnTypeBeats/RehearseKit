@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
-import { apiClient, type Job } from "@/utils/api";
+import { apiClient, type Job, getApiUrl } from "@/utils/api";
 import { JobProgressSocket, type JobProgressUpdate } from "@/utils/websocket";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -33,30 +33,6 @@ export default function JobDetailPage() {
   const queryClient = useQueryClient();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  // Smart API URL - calculates from frontend port
-  const getApiUrl = () => {
-    if (typeof window !== 'undefined') {
-      if (window.location.protocol === 'https:') {
-        return window.location.origin;
-      }
-      
-      const frontendPort = parseInt(window.location.port || '80');
-      let apiPort: number;
-      
-      if (frontendPort === 3000) {
-        apiPort = 8000; // Local dev
-      } else if (frontendPort >= 30000) {
-        apiPort = frontendPort + 1; // TrueNAS (30070 → 30071)
-      } else {
-        apiPort = frontendPort + 1;
-      }
-      
-      return `${window.location.protocol}//${window.location.hostname}:${apiPort}`;
-    }
-    
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-  };
   
   const { data: initialJob, isLoading, error } = useQuery({
     queryKey: ["job", jobId],
@@ -423,7 +399,7 @@ export default function JobDetailPage() {
                 className="w-full" 
                 size="lg"
                 onClick={() => {
-                  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+                  const apiUrl = getApiUrl();
                   window.open(`${apiUrl}/api/jobs/${job.id}/download`, "_blank");
                 }}
               >

@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { type Job } from "@/utils/api";
+import { type Job, getApiUrl } from "@/utils/api";
 import { JobProgressSocket, type JobProgressUpdate } from "@/utils/websocket";
 import { getStatusBadgeVariant } from "@/utils/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -114,11 +114,7 @@ export function JobCard({ job: initialJob }: JobCardProps) {
 
   const handleDownload = async () => {
     // Download from backend API
-    // Use smart URL detection - same logic as api.ts
-    const apiUrl = typeof window !== 'undefined' && window.location.protocol === 'https:'
-      ? window.location.origin  // For https://rehearsekit.uk -> /api/jobs/{id}/download
-      : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
-    
+    const apiUrl = getApiUrl();
     const downloadUrl = `${apiUrl}/api/jobs/${job.id}/download`;
     
     try {
@@ -149,7 +145,7 @@ export function JobCard({ job: initialJob }: JobCardProps) {
 
   const handleCancel = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/jobs/${job.id}/cancel`, {
         method: "POST",
       });
@@ -168,7 +164,7 @@ export function JobCard({ job: initialJob }: JobCardProps) {
 
   const handleDelete = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = getApiUrl();
       const response = await fetch(`${apiUrl}/api/jobs/${job.id}`, {
         method: "DELETE",
       });

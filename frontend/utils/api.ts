@@ -1,5 +1,5 @@
 // Smart API URL - adapts to environment
-const getApiUrl = () => {
+export const getApiUrl = () => {
   if (typeof window !== 'undefined') {
     // HTTPS → use same origin (Cloudflare proxies /api)
     if (window.location.protocol === 'https:') {
