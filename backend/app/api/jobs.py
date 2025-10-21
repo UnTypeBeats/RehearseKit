@@ -24,6 +24,8 @@ async def create_job(
     input_url: Optional[str] = Form(None),
     youtube_preview_id: Optional[str] = Form(None),
     manual_bpm: Optional[float] = Form(None),
+    trim_start: Optional[float] = Form(None),
+    trim_end: Optional[float] = Form(None),
     file: Optional[UploadFile] = File(None),
     db: AsyncSession = Depends(get_db),
 ):
@@ -55,6 +57,8 @@ async def create_job(
         input_type=actual_input_type,
         input_url=input_url,
         manual_bpm=manual_bpm,
+        trim_start=trim_start,
+        trim_end=trim_end,
         status=JobStatus.PENDING,
     )
     

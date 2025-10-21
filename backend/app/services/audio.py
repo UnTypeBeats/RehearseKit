@@ -92,6 +92,43 @@ class AudioService:
             raise RuntimeError(f"FFmpeg conversion failed: {result.stderr}")
         return output_path
     
+    def trim_audio(self, input_path: str, output_dir: str, start_time: float, end_time: float) -> str:
+        """
+        Trim audio file to specified time range using FFmpeg
+        
+        Args:
+            input_path: Path to input audio file
+            output_dir: Directory to save trimmed audio
+            start_time: Start time in seconds
+            end_time: End time in seconds
+            
+        Returns:
+            Path to trimmed audio file
+        """
+        output_path = os.path.join(output_dir, "trimmed_audio.wav")
+        
+        # Calculate duration
+        duration = end_time - start_time
+        
+        # Use FFmpeg to trim audio
+        cmd = [
+            'ffmpeg',
+            '-i', input_path,
+            '-ss', str(start_time),  # Start time
+            '-t', str(duration),     # Duration
+            '-ar', '48000',
+            '-acodec', 'pcm_s24le',
+            '-ac', '2',
+            '-y',
+            output_path
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"FFmpeg trim failed: {result.stderr}")
+        
+        return output_path
+    
     def detect_tempo(self, audio_path: str) -> float:
         """Detect tempo/BPM using librosa"""
         y, sr = librosa.load(audio_path, sr=None)

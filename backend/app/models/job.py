@@ -44,6 +44,8 @@ class Job(Base):
     # Processing results
     detected_bpm = Column(Float, nullable=True)
     manual_bpm = Column(Float, nullable=True)
+    trim_start = Column(Float, nullable=True)  # Trim start time in seconds
+    trim_end = Column(Float, nullable=True)    # Trim end time in seconds
     progress_percent = Column(Integer, default=0)
     error_message = Column(Text, nullable=True)
     

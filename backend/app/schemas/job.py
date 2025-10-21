@@ -32,6 +32,9 @@ class JobCreate(BaseModel):
     input_type: InputType
     input_url: Optional[str] = None
     manual_bpm: Optional[float] = Field(None, gt=0, lt=300)
+    trim_start: Optional[float] = Field(None, ge=0, description="Trim start time in seconds")
+    trim_end: Optional[float] = Field(None, ge=0, description="Trim end time in seconds")
+    youtube_preview_id: Optional[str] = None
 
 
 class JobResponse(BaseModel):
@@ -43,6 +46,8 @@ class JobResponse(BaseModel):
     quality_mode: QualityMode
     detected_bpm: Optional[float] = None
     manual_bpm: Optional[float] = None
+    trim_start: Optional[float] = None
+    trim_end: Optional[float] = None
     progress_percent: int
     error_message: Optional[str] = None
     source_file_path: Optional[str] = None

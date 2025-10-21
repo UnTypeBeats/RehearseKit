@@ -105,6 +105,16 @@ def process_audio_job(self, job_id: str):
         update_job_status(job_id, "CONVERTING", 10, redis_client)
         wav_path = audio_service.convert_to_wav(source_path, temp_dir)
         
+        # 2.5. Trim audio if trim parameters are provided
+        if job.trim_start is not None and job.trim_end is not None:
+            update_job_status(job_id, "CONVERTING", 15, redis_client)
+            wav_path = audio_service.trim_audio(
+                wav_path,
+                temp_dir,
+                job.trim_start,
+                job.trim_end
+            )
+        
         # 3. Detect tempo
         update_job_status(job_id, "ANALYZING", 25, redis_client)
         detected_bpm = audio_service.detect_tempo(wav_path)

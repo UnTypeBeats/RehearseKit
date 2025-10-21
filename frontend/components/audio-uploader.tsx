@@ -25,6 +25,10 @@ export function AudioUploader() {
   const [youtubeThumbnail, setYoutubeThumbnail] = useState<string | null>(null);
   const [isLoadingYouTube, setIsLoadingYouTube] = useState(false);
   
+  // Trim state
+  const [trimStart, setTrimStart] = useState<number | null>(null);
+  const [trimEnd, setTrimEnd] = useState<number | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast} = useToast();
   const queryClient = useQueryClient();
@@ -92,6 +96,8 @@ export function AudioUploader() {
           input_type: inputType,
           input_url: inputType === "youtube" ? youtubeUrl : undefined,
           youtube_preview_id: inputType === "youtube" ? youtubePreviewId! : undefined,
+          trim_start: trimStart || undefined,
+          trim_end: trimEnd || undefined,
         },
         inputType === "upload" ? file! : undefined
       );
@@ -304,7 +310,15 @@ export function AudioUploader() {
       {audioPreviewUrl && (
         <div className="space-y-2">
           <label className="text-sm font-medium">Audio Preview</label>
-          <AudioWaveform audioUrl={audioPreviewUrl} showControls={true} />
+          <AudioWaveform 
+            audioUrl={audioPreviewUrl} 
+            showControls={true} 
+            enableTrimming={true}
+            onTrimChange={(start, end) => {
+              setTrimStart(start);
+              setTrimEnd(end);
+            }}
+          />
         </div>
       )}
 
