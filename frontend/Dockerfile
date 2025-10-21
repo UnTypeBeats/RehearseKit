@@ -11,14 +11,11 @@ RUN npm install --production=false
 COPY . .
 
 # Build arguments for environment variables
-ARG NEXT_PUBLIC_API_URL=http://localhost:8000
-ARG NEXT_PUBLIC_WS_URL=ws://localhost:8001
 ARG NEXT_PUBLIC_APP_NAME=RehearseKit
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+# No NEXT_PUBLIC_API_URL or NEXT_PUBLIC_WS_URL - using runtime detection in browser
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 
 # Build the application
