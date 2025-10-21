@@ -295,6 +295,44 @@ async def get_source_audio(
         raise HTTPException(status_code=501, detail="GCS source preview not implemented")
 
 
+@router.get("/{job_id}/stems/{stem_type}")
+async def get_stem(
+    job_id: UUID,
+    stem_type: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get individual stem file for mixing preview"""
+    
+    valid_stems = ["vocals", "drums", "bass", "other"]
+    if stem_type not in valid_stems:
+        raise HTTPException(status_code=400, detail=f"Invalid stem type. Must be one of: {valid_stems}")
+    
+    query = select(Job).where(Job.id == job_id)
+    result = await db.execute(query)
+    job = result.scalar_one_or_none()
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.status != JobStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Job not yet completed")
+    
+    if not job.stems_folder_path:
+        raise HTTPException(status_code=404, detail="Stems not found")
+    
+    # Find the stem file
+    stem_file = os.path.join(job.stems_folder_path, f"{stem_type}.wav")
+    
+    if not os.path.exists(stem_file):
+        raise HTTPException(status_code=404, detail=f"Stem file not found: {stem_type}")
+    
+    return FileResponse(
+        path=stem_file,
+        media_type="audio/wav",
+        filename=f"{stem_type}.wav"
+    )
+
+
 @router.get("/{job_id}/download")
 async def download_package(
     job_id: UUID,

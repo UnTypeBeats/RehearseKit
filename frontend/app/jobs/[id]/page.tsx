@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Download, Clock, Music2, Gauge, X, Trash2, RefreshCw } from "lucide-react";
 import { getStatusBadgeVariant } from "@/utils/utils";
 import { AudioWaveform } from "@/components/audio-waveform";
+import { StemMixer } from "@/components/stem-mixer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -412,6 +413,11 @@ export default function JobDetailPage() {
               <p className="text-sm">{job.error_message}</p>
             </CardContent>
           </Card>
+        )}
+
+        {/* Stem Mixer */}
+        {job.status === "COMPLETED" && (
+          <StemMixer jobId={job.id} apiUrl={getApiUrl()} />
         )}
 
         {/* Download Section */}
