@@ -1,276 +1,286 @@
 # Cubase Import Guide - RehearseKit Stems
 
-**Issue:** Cubase does not support .dawproject import (as of Cubase 13)  
-**Solution:** Manual stem import with this quick guide  
-**Time Required:** 2-3 minutes
+**Update:** Cubase 14 Pro DOES support .dawproject import! 🎉  
+**Requirement:** Specific folder structure (now included in RehearseKit packages)  
+**Time Required:** 1 minute
 
 ---
 
-## Why Doesn't Cubase Support .dawproject?
+## ✅ Cubase 14 Pro - .dawproject Import (RECOMMENDED)
 
-Despite being part of the DAWproject consortium, **Steinberg has not implemented .dawproject import in Cubase**. The format works perfectly in:
-- ✅ Studio One 7 (PreSonus)
-- ✅ Bitwig Studio
-- ✅ Reaper
-- ❌ Cubase (all versions)
+**Good News:** Cubase 14 Pro supports .dawproject import! The key is understanding Cubase's two-step selection process.
 
-**Workaround:** Manual stem import (it's actually quite fast!)
+### How It Works
+
+Cubase expects a **folder structure** for .dawproject imports:
+```
+ProjectName/
+  └── project.dawproject
+```
+
+RehearseKit packages now include this structure automatically!
+
+### Import Steps (1 Minute)
+
+1. **Extract the ZIP file**
+   - Download your RehearseKit package
+   - Extract all contents to a folder
+
+2. **Import into Cubase**
+   - Open Cubase 14 Pro
+   - **File → Import → DAWproject**
+   - If prompted about existing project:
+     - **"Yes"** = Import into new project
+     - **"No"** = Import into current project
+
+3. **Two-Step Selection** (Important!)
+   - **STEP 1:** In the file browser, **SELECT THE PROJECT FOLDER** (e.g., "MyProject/")
+   - **STEP 2:** Navigate INTO that folder and **SELECT THE .dawproject FILE**
+   - Click **"Open"**
+
+4. **Done!** ✅
+   - All 4 stems imported as separate tracks
+   - Tempo automatically set to detected BPM
+   - Sample rate: 48000 Hz (48 kHz)
+   - Tracks named: Vocals, Drums, Bass, Other
+
+**Total Time:** ~1 minute
 
 ---
 
-## Quick Import Guide (2 Minutes)
+## 📦 Package Structure
 
-### Step 1: Extract the ZIP
+Your RehearseKit download contains:
 
-1. Download your RehearseKit package
-2. Extract the ZIP file
-3. You'll see:
-   ```
-   /stems/
-     ├── bass.wav
-     ├── drums.wav
-     ├── other.wav
-     └── vocals.wav
-   /cubase/
-     └── IMPORT_GUIDE.txt  <-- Quick reference
-   README.txt
-   [ProjectName].dawproject  <-- For Studio One/Bitwig
-   ```
+```
+package.zip
+├── ProjectName/
+│   └── project.dawproject     ← For Cubase, Studio One, Bitwig, Reaper
+├── stems/
+│   ├── vocals.wav
+│   ├── drums.wav
+│   ├── bass.wav
+│   └── other.wav              ← Manual import fallback
+├── IMPORT_GUIDE.txt
+└── README.txt
+```
 
-### Step 2: Create New Cubase Project
+---
 
-1. Open Cubase
-2. **File → New Project**
-3. Select **"Empty"** template
-4. Choose save location
-5. **Set Project Settings:**
-   - Sample Rate: **48000 Hz** (48 kHz)
+## 🎹 Other DAWs
+
+### Studio One 7, Bitwig, Reaper
+
+**Even simpler:**
+1. Extract the ZIP
+2. File → Open
+3. Select the `.dawproject` file
+4. Done!
+
+**Note:** Studio One may open at 44.1 kHz - change to 48 kHz in Song Setup if needed (takes 5 seconds).
+
+---
+
+## 🛠️ Manual Import (Fallback Method)
+
+If .dawproject import doesn't work for any reason, use the `stems/` folder:
+
+### Quick Method (2 Minutes)
+
+1. **Create New Cubase Project**
+   - File → New Project → Empty
+   - Sample Rate: **48000 Hz**
    - Bit Depth: **24-bit**
-   - Tempo: **[Your detected BPM is in README.txt]**
+   - Tempo: **[Check README.txt for detected BPM]**
 
-### Step 3: Import Stems (Drag-and-Drop Method)
+2. **Add 4 Audio Tracks**
+   - Press **Ctrl+T** (Win) or **Cmd+T** (Mac) four times
+   - Name tracks: **Vocals**, **Drums**, **Bass**, **Other**
 
-**Fastest Way:**
+3. **Drag-and-Drop Stems**
+   - Open file browser to `stems/` folder
+   - Drag `vocals.wav` → Vocals track (position 1.1.1.0)
+   - Drag `drums.wav` → Drums track (position 1.1.1.0)
+   - Drag `bass.wav` → Bass track (position 1.1.1.0)
+   - Drag `other.wav` → Other track (position 1.1.1.0)
 
-1. In Cubase, create **4 audio tracks**:
-   - Right-click Track List → **Add Audio Track** (x4)
-   - Or press **Ctrl+T** (Win) / **Cmd+T** (Mac) four times
-
-2. **Name the tracks:**
-   - Track 1: `Vocals`
-   - Track 2: `Drums`
-   - Track 3: `Bass`
-   - Track 4: `Other`
-
-3. **Drag-and-drop stems:**
-   - Open your file browser to `stems/` folder
-   - Drag `vocals.wav` → Vocals track (timeline position 0)
-   - Drag `drums.wav` → Drums track (timeline position 0)
-   - Drag `bass.wav` → Bass track (timeline position 0)
-   - Drag `other.wav` → Other track (timeline position 0)
-
-4. **Done!** All stems are now in Cubase, aligned, and ready to play
+4. **Set Tempo**
+   - Check detected BPM in README.txt
+   - Project → Tempo Track → Set tempo
 
 **Time:** ~2 minutes
 
-### Step 4: Set Tempo (Optional)
-
-The detected BPM is written in `README.txt` inside your ZIP package.
-
-1. Open **Tempo Track** (Ctrl+T or Cmd+T)
-2. Set tempo to detected BPM
-3. Enable **Musical Mode** on audio events (if needed)
-
 ---
 
-## Alternative: Import via Pool
+## 🚨 Troubleshooting
 
-**For more control over import settings:**
+### Issue: .dawproject files appear grayed out
 
-### Method 1: Pool Import
-
-1. Open **Pool** (Ctrl+P or Cmd+P)
-2. **Import Files** button
-3. Navigate to `stems/` folder
-4. Select all 4 WAV files
-5. Click **Open**
-6. Files appear in Pool
-
-### Method 2: Drag from Pool to Timeline
-
-1. Create audio tracks (as above)
-2. Drag each file from Pool to corresponding track
-3. Align all to position 1.1.1.0 (bar 1, beat 1)
-
----
-
-## Automation Script (Optional - For Power Users)
-
-If you import stems frequently, use this Cubase Logical Editor preset:
-
-### Cubase Macro: Quick Import
-
-**Not available in Cubase** - No scripting support unfortunately.
-
-**Alternative:** Create a template project
-
-1. **One-time setup:**
-   - Create empty project with 4 audio tracks
-   - Name them: Vocals, Drums, Bass, Other
-   - Set sample rate to 48 kHz
-   - **Save as Template:** File → Save as Template
-   - Name: "RehearseKit 4-Stem"
-
-2. **For each new RehearseKit package:**
-   - File → New Project → **RehearseKit 4-Stem**
-   - Drag-and-drop 4 stems to timeline
-   - Set tempo from README
-   - **Done in 1 minute!**
-
----
-
-## Troubleshooting
-
-### Issue: Stems are out of sync
-
-**Cause:** Different start times
+**Cause:** You're trying to select the file at the wrong step
 
 **Solution:**
-1. Select all audio events
-2. **Audio → Events to Part** (convert to parts)
-3. Use **Group Editing** to move together
+1. In the Cubase import dialog, first SELECT THE FOLDER containing the .dawproject
+2. THEN navigate into that folder and select the .dawproject file itself
+3. Cubase expects folder selection → file selection (two steps)
 
 ### Issue: Wrong sample rate warning
 
-**Cause:** Project set to 44.1 kHz instead of 48 kHz
+**Cause:** Project defaults to 44.1 kHz instead of 48 kHz
 
 **Solution:**
 1. **Project → Project Setup**
 2. Change Sample Rate to **48000 Hz**
-3. Cubase will convert automatically (may take a moment)
+3. Cubase will convert automatically
 
 ### Issue: Tempo is wrong
 
-**Cause:** Need to set tempo manually
+**Cause:** Tempo not imported correctly
 
 **Solution:**
-1. Check `README.txt` in ZIP for detected BPM
+1. Check `README.txt` for detected BPM
 2. **Project → Tempo Track**
 3. Set tempo to detected value
-4. Save project
+
+### Issue: Stems are out of sync
+
+**Cause:** Different start positions
+
+**Solution:**
+1. Select all audio events
+2. Press **E** to open Sample Editor
+3. Align all to position 1.1.1.0
 
 ---
 
-## Why We Can't Generate Native .cpr Files
+## 💡 Pro Tips
 
-**Technical Limitation:**
-- Cubase .cpr format is **proprietary and undocumented**
-- No public specification available
-- Reverse engineering is unreliable
-- Only Cubase itself can create valid .cpr files
+### Create a Template (Saves Even More Time)
 
-**What RehearseKit Provides:**
-- ✅ Individual stems (48 kHz, 24-bit WAV)
-- ✅ .dawproject for Studio One/Bitwig/Reaper
-- ✅ Clear naming convention
-- ✅ BPM information in README
-- ✅ This import guide
+**One-Time Setup:**
+1. Create empty project with 4 audio tracks
+2. Name them: Vocals, Drums, Bass, Other
+3. Set sample rate to 48000 Hz
+4. **File → Save as Template**
+5. Name: "RehearseKit 4-Stem"
 
-**Result:** 2-minute manual import vs. hours of manual stem separation
+**For Future Imports:**
+- File → New Project → **RehearseKit 4-Stem**
+- Drag 4 stems to timeline
+- Set tempo
+- **Done in 30 seconds!**
+
+### Keyboard Shortcuts
+
+- **Ctrl+T / Cmd+T** - Add audio track
+- **Ctrl+P / Cmd+P** - Open Pool (for import via Pool)
+- **Spacebar** - Play/Pause
+- **L** - Locator to start
+- **E** - Sample Editor
 
 ---
 
-## Comparison: Manual vs RehearseKit
+## 📊 Time Comparison
 
-### Traditional Workflow (No RehearseKit)
+### Without RehearseKit
 1. Find song audio - 10 min
 2. Use online stem separator - 15 min
-3. Download individual stems - 5 min
+3. Download stems - 5 min
 4. Convert to correct format - 10 min
-5. Detect BPM manually - 5 min
-6. Import to Cubase - 5 min
-7. Set tempo and align - 5 min
+5. Detect BPM - 5 min
+6. Import to DAW - 5 min
+7. Align and setup - 5 min
 
 **Total:** ~55 minutes
 
-### With RehearseKit
+### With RehearseKit (.dawproject)
 1. Upload to RehearseKit - 1 min
-2. Wait for processing - 5 min (automatic)
+2. Processing (automatic) - 5 min
 3. Download ZIP - 1 min
-4. Import to Cubase (this guide) - 2 min
-5. Set tempo - 30 sec
+4. Import to Cubase - 1 min
 
-**Total:** ~9-10 minutes (saves 45 minutes!)
+**Total:** ~8 minutes (saves 47 minutes!)
 
-**Even with manual Cubase import, you save 80% of the time!**
+### With RehearseKit (Manual Import)
+1. Upload to RehearseKit - 1 min
+2. Processing (automatic) - 5 min
+3. Download ZIP - 1 min
+4. Manual import to Cubase - 2 min
 
----
+**Total:** ~9 minutes (saves 46 minutes!)
 
-## Future Possibilities
-
-### Option 1: Cubase Template Generator
-
-**Not feasible** - .cpr format is proprietary
-
-### Option 2: Cubase Scripting
-
-**Not available** - Cubase has no scripting/CLI
-
-### Option 3: Wait for Cubase
-
-**Possible** - Steinberg may add .dawproject import in future
-
-### Option 4: Use Studio One Instead
-
-**Works today** - Studio One imports .dawproject perfectly!
+**You save 85% of your time with RehearseKit!**
 
 ---
 
-## Best Workflow for Cubase Users
+## 🔍 Technical Details
 
-### Recommended Setup
+### What's in the .dawproject file?
 
-1. **Create RehearseKit template in Cubase (one time):**
-   - 4 audio tracks (Vocals, Drums, Bass, Other)
-   - 48 kHz / 24-bit project settings
-   - Save as template
+The .dawproject is a ZIP file containing:
+- `project.xml` - Project structure, tracks, clips
+- `metadata.xml` - Project metadata (name, BPM, etc.)
+- `audio/` folder - All stem files (48 kHz, 24-bit WAV)
 
-2. **For each RehearseKit package:**
-   - Open template
-   - Drag 4 stems to timeline (30 seconds)
-   - Set tempo from README (10 seconds)
-   - Start rehearsing!
+### Why the folder structure?
 
-**Time per package:** ~1 minute
+Cubase's .dawproject import workflow expects:
+1. User selects a **project folder** (not a file)
+2. Then selects the **.dawproject file** inside that folder
 
----
+This is different from other DAWs (Studio One, Bitwig) that allow direct file selection.
 
-## Feedback to Steinberg
-
-If you want .dawproject support in Cubase:
-
-**Vote here:** https://forums.steinberg.net/t/dawproject-format-exchange-between-daws-achieved/870243
-
-**Or contact Steinberg support** requesting .dawproject import feature.
+RehearseKit packages now include this folder structure automatically, so Cubase users can import with zero friction!
 
 ---
 
-## Conclusion
+## 🎯 What RehearseKit Provides
 
-**The Limitation:** Cubase doesn't support .dawproject (not RehearseKit's fault)
-
-**The Workaround:** 2-minute manual import (still way faster than manual stem separation)
-
-**The Good News:** 
-- ✅ Stems are perfect quality (48 kHz, 24-bit)
-- ✅ All aligned and ready
-- ✅ BPM detected for you
-- ✅ Works great in Studio One/Bitwig
-- ✅ Cubase import is quick and easy
-
-**You still save 45+ minutes per song compared to manual stem separation!**
+- ✅ AI-powered stem separation (vocals, drums, bass, other)
+- ✅ Automatic BPM detection
+- ✅ .dawproject files with correct folder structure for Cubase
+- ✅ Individual stem files (48 kHz, 24-bit WAV)
+- ✅ Works with Cubase, Studio One, Bitwig, Reaper
+- ✅ Comprehensive import guides
+- ✅ Perfect alignment (all stems start at 0:00)
 
 ---
 
-**Questions? Issues?** Check `README.txt` in your download package or docs/cubase-import-guide.md
+## 🚀 Best Workflow
+
+### For Cubase 14 Pro Users
+
+**Use .dawproject import** (1 minute):
+1. Extract ZIP
+2. File → Import → DAWproject
+3. Select folder → Select file
+4. Done!
+
+### For Older Cubase Versions
+
+**Use manual import** (2 minutes):
+1. Extract ZIP
+2. Create 4 tracks (or use template)
+3. Drag stems from `stems/` folder
+4. Set tempo
+
+---
+
+## 📝 Version History
+
+- **v2.0 (Oct 2025)** - Added Cubase-compatible folder structure for .dawproject
+- **v1.0 (Sep 2025)** - Initial release with manual import guide
+
+---
+
+## 🆘 Need Help?
+
+- **In-package guide:** See `IMPORT_GUIDE.txt` in your download
+- **README:** Check `README.txt` for BPM and technical specs
+- **Documentation:** `/docs/cubase-import-guide.md` (this file)
+- **Website:** https://rehearsekit.uk
+- **Issues:** https://github.com/UnTypeBeats/RehearseKit/issues
+
+---
+
+**Questions? Found a bug?** Open an issue on GitHub or check the troubleshooting section above!
 

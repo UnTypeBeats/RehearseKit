@@ -203,74 +203,91 @@ class AudioService:
         
         Note: The DAWproject file already contains the stems,
         but we also include them separately for convenience.
-        Cubase users should use the individual stems (see cubase/ folder in package).
+        
+        Package structure for Cubase compatibility:
+          - ProjectName/
+              └── project.dawproject  (for Cubase: select folder first, then file)
+          - stems/
+              └── *.wav  (individual stems for manual import)
         """
         with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             # Add individual stems in a separate folder
             for stem_file in Path(stems_dir).glob("*.wav"):
                 zipf.write(stem_file, f"stems/{stem_file.name}")
             
-            # Add DAWproject file
+            # Add DAWproject file inside a project folder (Cubase compatibility)
             if os.path.exists(dawproject_path):
-                zipf.write(dawproject_path, os.path.basename(dawproject_path))
+                dawproject_filename = os.path.basename(dawproject_path)
+                project_name = Path(dawproject_filename).stem
+                # Wrap .dawproject in a folder for Cubase import workflow
+                zipf.write(dawproject_path, f"{project_name}/{dawproject_filename}")
                 
-            # Add Cubase-specific import guide
-            cubase_guide = f"""CUBASE IMPORT GUIDE
+            # Add import guide for all DAWs
+            import_guide = f"""DAW IMPORT GUIDE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️  IMPORTANT: Cubase does NOT support .dawproject import!
-
-Use this 2-minute manual import method instead:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-QUICK IMPORT (2 MINUTES):
-
-1. CREATE NEW PROJECT
-   - File → New Project → Empty
-   - Sample Rate: 48000 Hz (48 kHz)
-   - Tempo: {bpm} BPM
-
-2. ADD 4 AUDIO TRACKS
-   - Press Ctrl+T (Windows) or Cmd+T (Mac) four times
-   - Name tracks: Vocals, Drums, Bass, Other
-
-3. IMPORT STEMS
-   - Drag vocals.wav to Vocals track at position 1.1.1.0
-   - Drag drums.wav to Drums track at position 1.1.1.0
-   - Drag bass.wav to Bass track at position 1.1.1.0
-   - Drag other.wav to Other track at position 1.1.1.0
-
-4. DONE!
-   - All stems are aligned and ready
-   - Set tempo to {bpm} BPM if not already set
+📦 PACKAGE CONTENTS:
+  - ProjectName/ folder with .dawproject file (Cubase, Bitwig, Studio One, Reaper)
+  - stems/ folder with individual .wav files (manual import for any DAW)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PRO TIP: Create a Template
+🎵 CUBASE 14 PRO (.dawproject import)
 
-One-time setup (saves time on future imports):
+IMPORTANT: Cubase requires a two-step selection process!
 
-1. Create project with 4 tracks named: Vocals, Drums, Bass, Other
-2. Set sample rate to 48000 Hz
-3. File → Save as Template → "RehearseKit 4-Stem"
+1. EXTRACT THE ZIP
+   - Extract all files from this package to a folder
 
-Future imports:
-- File → New Project → RehearseKit 4-Stem
-- Drag 4 stems → Done in 30 seconds!
+2. IMPORT DAWPROJECT
+   - File → Import → DAWproject
+   - If prompted about existing project: choose "Yes" (new project) or "No" (current project)
+   - **STEP 1:** In the file browser, navigate to and SELECT THE PROJECT FOLDER (ProjectName/)
+   - **STEP 2:** Then click into that folder and SELECT THE .dawproject FILE
+   - Click "Open"
+
+3. DONE!
+   - All 4 stems imported as separate tracks
+   - Tempo set to {bpm} BPM
+   - Sample rate: 48000 Hz
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-TROUBLESHOOTING:
+🎹 STUDIO ONE 7, BITWIG, REAPER (.dawproject)
 
-"Wrong sample rate" warning?
-→ Project → Project Setup → Set to 48000 Hz
+1. Extract the ZIP file
+2. Open your DAW
+3. File → Open (or Import) → Select the .dawproject file
+4. Done!
+
+Note: Studio One may open at 44.1 kHz - change to 48 kHz in Song Setup if needed.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🛠️ MANUAL IMPORT (Any DAW)
+
+If .dawproject doesn't work, use the stems/ folder:
+
+1. Create new project (48000 Hz, {bpm} BPM)
+2. Add 4 audio tracks: Vocals, Drums, Bass, Other
+3. Drag stems from stems/ folder to corresponding tracks
+4. Align all stems to position 1.1.1.0
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TROUBLESHOOTING:
+
+Cubase: Files appear grayed out during import?
+→ Make sure you SELECT THE FOLDER first, then the .dawproject file inside
+
+Wrong sample rate warning?
+→ Project Setup → Set to 48000 Hz
 
 Stems not aligned?
-→ Select all → Move to 1.1.1.0
+→ Select all clips → Move to 1.1.1.0
 
 Tempo wrong?
-→ Transport → Set tempo to {bpm} BPM
+→ Set transport tempo to {bpm} BPM
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -279,9 +296,9 @@ docs/cubase-import-guide.md
 
 Generated by RehearseKit
 """
-            zipf.writestr("cubase/IMPORT_GUIDE.txt", cubase_guide)
+            zipf.writestr("IMPORT_GUIDE.txt", import_guide)
                 
-            # Add README with Cubase-specific instructions
+            # Add README with import instructions
             readme = f"""RehearseKit - Your Complete Rehearsal Toolkit
 
 PROJECT: {os.path.basename(stems_dir).replace('stems_wav', '')}
@@ -291,53 +308,43 @@ BIT DEPTH: 24-bit
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PACKAGE CONTENTS:
+📦 PACKAGE CONTENTS:
 
-1. stems/ - Individual stem files (WAV format, 24-bit/48kHz)
+1. ProjectName/ - DAW project folder
+   └── *.dawproject - Open interchange format
+       ✅ Cubase 14 Pro (with special import process)
+       ✅ Studio One 7
+       ✅ Bitwig
+       ✅ Reaper
+
+2. stems/ - Individual stem files (WAV format, 24-bit/48kHz)
    ├── vocals.wav  - Lead and backing vocals
    ├── drums.wav   - Drum kit (kick, snare, hi-hat, cymbals)
    ├── bass.wav    - Bass guitar and sub-bass
    └── other.wav   - Guitars, keys, synths, strings, ambient
 
-2. *.dawproject - DAW project file (open interchange format)
-   - ✅ WORKS: Studio One, Bitwig, Reaper
-   - ❌ NOT SUPPORTED: Cubase (see Cubase guide below)
-
-3. cubase/ - Cubase-specific import guide
-   └── IMPORT_GUIDE.txt - Quick 2-minute import instructions
+3. IMPORT_GUIDE.txt - Detailed instructions for all DAWs
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-QUICK START:
+🚀 QUICK START:
 
-Studio One / Bitwig / Reaper Users:
-→ Open the .dawproject file and you're done!
+🎵 Cubase 14 Pro:
+1. Extract this ZIP file
+2. File → Import → DAWproject
+3. SELECT THE PROJECT FOLDER first (ProjectName/)
+4. Then SELECT THE .dawproject FILE inside
+5. Done! All tracks imported with {bpm} BPM
 
-Cubase Users (IMPORTANT):
-→ Cubase does NOT support .dawproject import
-→ Follow the guide in cubase/IMPORT_GUIDE.txt for 2-minute manual import
-→ Or use the quick method below:
+🎹 Studio One / Bitwig / Reaper:
+1. Extract this ZIP file
+2. File → Open → Select the .dawproject file
+3. Done!
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CUBASE QUICK IMPORT (2 MINUTES):
-
-1. Create new Cubase project
-   - Sample Rate: 48000 Hz
-   - Tempo: {bpm} BPM
-
-2. Add 4 audio tracks (Ctrl+T or Cmd+T four times)
-   - Name them: Vocals, Drums, Bass, Other
-
-3. Drag-and-drop from stems/ folder:
-   - vocals.wav → Vocals track (position 1.1.1.0)
-   - drums.wav → Drums track (position 1.1.1.0)
-   - bass.wav → Bass track (position 1.1.1.0)
-   - other.wav → Other track (position 1.1.1.0)
-
-4. Done! All stems aligned and ready to play.
-
-TIP: Create a Cubase template with these 4 tracks to import even faster!
+🛠️ Manual Import (Any DAW):
+1. Create new project (48000 Hz, {bpm} BPM)
+2. Drag files from stems/ folder to your tracks
+3. Done!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
