@@ -1,32 +1,80 @@
-## Immediate
+## ✅ Completed: Stage 2 (Deployed Oct 21, 2025)
 
-### Auth
-> need auth/users/login capabilities via google auth, create oleg@befeast.com before as admin
-
-
-### bugs
-- investigate other formats than .dawproject
-- fix "not secure" ws bug
-
-## Right afeter
 ### Audio file management
-> Audio file handling features
-- [] display uploaded/fetched from YT audio as waveform
-- [] controls to play it
-- [] controls to trim it
-- [] button to reprocess in better quality
+- ✅ Display uploaded/fetched from YT audio as waveform (WaveSurfer.js)
+- ✅ Controls to play it (spacebar, seek controls)
+- ✅ YouTube two-step workflow (fetch → preview → process)
+- ✅ Source audio playback on job details page
+- ✅ Cancel/Delete buttons with confirmation dialogs
 
+### Critical Bug Fixes
+- ✅ Fixed API URL detection (runtime vs build-time)
+- ✅ Fixed download in Brave browser
+- ✅ Centralized API URL logic across all components
 
-## After previous implemented/tested on staging (truenas)
+---
 
-### plan prod deployment 
-- compare different popular cloud solutions
-- plan deployment to prod using comparison
+## 🎯 Stage 3: Advanced Audio Features
 
-### mix capabilities
+### 1. Waveform Trimming
+- [ ] Add region selection to waveform component
+- [ ] Visual start/end markers
+- [ ] Send trim parameters to backend
+- [ ] Process only selected portion of audio
+- [ ] Update job schema to include trim info
 
-- incorporate https://audiomixer.io/?ref=madewithvuejs.com audio mixer to preview/raff mix multi channels befor download
+### 2. Reprocess Button
+- [ ] Add "Reprocess in High Quality" button to job details
+- [ ] Reuse existing source file (no re-upload/download)
+- [ ] Create new job with quality upgrade
+- [ ] Link to original job for comparison
 
-### model improvements
+### 3. Mix Preview
+- [ ] Add individual stem volume controls
+- [ ] Preview mix before download
+- [ ] Incorporate audio mixer UI (ref: https://audiomixer.io/)
+- [ ] Save mix settings with job
+- [ ] Optional: export custom mix as additional file
 
-- improve separation capabilities (split guitars - clean, lead, distorted, separate synths)
+### 4. Fix Cubase DAWproject Import Issue
+> **Problem:** Cubase expects folder selection first, then file selection. Current .dawproject files appear grayed out during import.
+
+**Implementation:**
+- [ ] Update `dawproject_generator.py` to create folder structure
+- [ ] Modify package to include parent folder:
+  ```
+  📁 ProjectName/
+     └── 📄 project.dawproject
+     └── 📁 Audio Files/
+         └── (stem files)
+  ```
+- [ ] Update ZIP creation logic to preserve folder structure
+- [ ] Test import workflow in Cubase 14 Pro
+- [ ] Update documentation with correct import steps
+
+**Reference:** See `docs/ideas/dawproject-cubase-import-issue.md` for detailed analysis
+
+---
+
+## 🔮 Future: Authentication & Production
+
+### Auth (Post-Stage 3)
+- [ ] Google OAuth integration
+- [ ] User accounts (oleg@befeast.com as admin)
+- [ ] Job ownership and history
+- [ ] Storage quotas per user
+
+### Bugs to Investigate
+- [ ] Fix "not secure" WebSocket warning on HTTPS
+- [ ] Investigate other DAW project formats (AAF, OMF, etc.)
+
+### Production Deployment Planning
+- [ ] Compare cloud solutions (GCP, AWS, Render, Railway)
+- [ ] Cost analysis for different hosting options
+- [ ] Migration plan from TrueNAS to cloud
+
+### Model Improvements (Long-term)
+- [ ] Improve separation capabilities
+- [ ] Split guitars: clean, lead, distorted
+- [ ] Separate synth types
+- [ ] 6-stem or 8-stem models
