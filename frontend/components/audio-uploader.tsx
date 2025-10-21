@@ -49,10 +49,15 @@ export function AudioUploader() {
       setYoutubeTitle(preview.title);
       setYoutubeThumbnail(preview.thumbnail || null);
       
-      // Use smart URL - same as API calls
-      const baseUrl = typeof window !== 'undefined' && window.location.protocol === 'https:'
-        ? window.location.origin
-        : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
+      // Use smart URL - adapts to hostname
+      let baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      if (typeof window !== 'undefined') {
+        if (window.location.protocol === 'https:') {
+          baseUrl = window.location.origin;
+        } else if (window.location.hostname === '10.0.0.155') {
+          baseUrl = 'http://10.0.0.155:30071';
+        }
+      }
       
       setAudioPreviewUrl(`${baseUrl}${preview.preview_url}`);
       

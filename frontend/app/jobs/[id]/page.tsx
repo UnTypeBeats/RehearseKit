@@ -34,11 +34,23 @@ export default function JobDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
-  // Smart API URL - same logic as api.ts
+  // Smart API URL - adapts to current hostname
   const getApiUrl = () => {
-    if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
-      return window.location.origin;
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      
+      // On HTTPS (rehearsekit.uk)
+      if (window.location.protocol === 'https:') {
+        return window.location.origin;
+      }
+      
+      // On TrueNAS IP
+      if (hostname === '10.0.0.155') {
+        return 'http://10.0.0.155:30071';
+      }
     }
+    
+    // Fallback for localhost/dev
     return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   };
   
