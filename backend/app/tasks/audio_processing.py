@@ -94,7 +94,10 @@ def process_audio_job(self, job_id: str):
         job = loop.run_until_complete(get_job())
         
         # 1. Acquire audio
-        if job.input_type.value == "upload":
+        if job.source_file_path and os.path.exists(job.source_file_path):
+            # Source file already exists (reprocessing or upload)
+            source_path = storage.get_local_path(job.source_file_path)
+        elif job.input_type.value == "upload":
             source_path = storage.get_local_path(job.source_file_path)
         else:
             # YouTube download

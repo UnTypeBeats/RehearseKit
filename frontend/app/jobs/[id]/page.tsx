@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, Download, Clock, Music2, Gauge, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Download, Clock, Music2, Gauge, X, Trash2, RefreshCw } from "lucide-react";
 import { getStatusBadgeVariant } from "@/utils/utils";
 import { AudioWaveform } from "@/components/audio-waveform";
 import {
@@ -33,6 +33,7 @@ export default function JobDetailPage() {
   const queryClient = useQueryClient();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isReprocessing, setIsReprocessing] = useState(false);
   
   const { data: initialJob, isLoading, error } = useQuery({
     queryKey: ["job", jobId],
@@ -101,6 +102,34 @@ export default function JobDetailPage() {
       }
     } catch (error) {
       console.error("Failed to delete job:", error);
+    }
+  };
+
+  const handleReprocess = async () => {
+    if (!job) return;
+    
+    setIsReprocessing(true);
+    try {
+      const response = await fetch(`${getApiUrl()}/api/jobs/${jobId}/reprocess`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          quality_mode: "high",
+        }),
+      });
+
+      if (response.ok) {
+        const newJob = await response.json();
+        router.push(`/jobs/${newJob.id}`);
+      } else {
+        console.error("Failed to reprocess job");
+      }
+    } catch (error) {
+      console.error("Failed to reprocess job:", error);
+    } finally {
+      setIsReprocessing(false);
     }
   };
 
@@ -394,7 +423,7 @@ export default function JobDetailPage() {
                 Your processed audio files are ready
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <Button 
                 className="w-full" 
                 size="lg"
@@ -406,8 +435,30 @@ export default function JobDetailPage() {
                 <Download className="mr-2 h-5 w-5" />
                 Download Complete Package
               </Button>
+              
+              {/* Reprocess button - only show for fast quality jobs */}
+              {job.quality_mode === "fast" && (
+                <div className="pt-2 border-t">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Want higher quality? Reprocess with the high-quality model
+                  </p>
+                  <Button 
+                    variant="outline"
+                    className="w-full" 
+                    onClick={handleReprocess}
+                    disabled={isReprocessing}
+                  >
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isReprocessing ? 'animate-spin' : ''}`} />
+                    {isReprocessing ? "Reprocessing..." : "Upgrade to High Quality"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Reuses your source file • No re-upload needed • Better separation quality
+                  </p>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-4 text-center">
-                Includes all stems + DAWproject file
+                Package includes all stems + DAWproject file
               </p>
             </CardContent>
           </Card>

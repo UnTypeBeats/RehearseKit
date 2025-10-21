@@ -184,6 +184,62 @@ async def cancel_job(
     return {"message": "Job cancelled successfully", "job": job}
 
 
+@router.post("/{job_id}/reprocess", response_model=JobResponse)
+async def reprocess_job(
+    job_id: UUID,
+    quality_mode: str = "high",
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Reprocess an existing job with different quality settings
+    
+    Reuses the source file from the original job, no re-upload needed.
+    """
+    
+    # Get the original job
+    query = select(Job).where(Job.id == job_id)
+    result = await db.execute(query)
+    original_job = result.scalar_one_or_none()
+    
+    if not original_job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if original_job.status != JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=400, 
+            detail="Can only reprocess completed jobs"
+        )
+    
+    if not original_job.source_file_path or not os.path.exists(original_job.source_file_path):
+        raise HTTPException(
+            status_code=400,
+            detail="Source file no longer available for reprocessing"
+        )
+    
+    # Create new job with upgraded quality
+    new_job = Job(
+        project_name=f"{original_job.project_name} (High Quality)",
+        quality_mode=QualityMode[quality_mode],
+        input_type=original_job.input_type,
+        input_url=original_job.input_url,
+        manual_bpm=original_job.manual_bpm or original_job.detected_bpm,
+        trim_start=original_job.trim_start,
+        trim_end=original_job.trim_end,
+        status=JobStatus.PENDING,
+        source_file_path=original_job.source_file_path,  # Reuse source file
+    )
+    
+    db.add(new_job)
+    await db.commit()
+    await db.refresh(new_job)
+    
+    # Queue processing task (will skip download/upload since source file exists)
+    from app.tasks.audio_processing import process_audio_job
+    process_audio_job.delay(str(new_job.id))
+    
+    return new_job
+
+
 @router.delete("/{job_id}")
 async def delete_job(
     job_id: UUID,
