@@ -97,6 +97,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NEXT_PUBLIC_APP_NAME=RehearseKit
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
       
       - name: Image digest
         run: echo "Frontend image pushed with digest ${{ steps.meta.outputs.digest }}"
