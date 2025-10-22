@@ -16,12 +16,12 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.core.database import get_db
+from app.core.config import settings
 from app.core.security import (
     create_access_token, create_refresh_token, decode_token, verify_token_type,
     blacklist_token, is_token_blacklisted, revoke_user_tokens, is_user_revoked
 )
 from app.core.oauth import google_oauth
-from app.core.config import settings
 from app.core.exceptions import (
     AuthenticationError, TokenError, GoogleAuthError, RateLimitError,
     create_structured_error_response
@@ -382,4 +382,14 @@ async def revoke_all_tokens(
         return {"message": "All tokens for this user have been revoked"}
     else:
         return {"message": "Token revocation may have failed, but tokens will expire naturally"}
+
+
+@router.get("/config")
+async def get_config():
+    """
+    Get frontend configuration including Google Client ID
+    """
+    return {
+        "googleClientId": settings.GOOGLE_CLIENT_ID
+    }
 
