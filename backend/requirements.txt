@@ -8,6 +8,7 @@ sqlalchemy[asyncio]>=2.0.27
 asyncpg>=0.29.0
 alembic>=1.13.1
 psycopg[binary]>=3.2.0
+psycopg2-binary>=2.9.9
 
 # Celery and async tasks
 celery>=5.3.6
