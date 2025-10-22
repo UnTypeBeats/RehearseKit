@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/_config');
         if (response.ok) {
           const config = await response.json();
           setGoogleClientId(config.googleClientId);

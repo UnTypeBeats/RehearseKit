@@ -1,0 +1,8 @@
+I don't know, what do you spend my tokens for, but every iteration (like 7-8 of them) I'm trying to tell you:
+@http://10.0.0.155:30070/api/config  WILL NOT WORK!!! google requires or localhost or FQDN, not ip for return url
+my staging (with FQDN @https://rehearsekit.uk/ ) deployed to trueNAS via SSH, where pulling images built on GH -- you repeatadly reporting it should work, but you just waisting my money, not fixing shit.
+AGAIN:
+- localhost works (i have an impression that frontend works not via docker -- fix it if so)
+- staging (@https://rehearsekit.uk/ ) not works and looks like you not fixing it at all
+- truENAS deploy/test should be via building ilmages on GH, pulling on truENAS (`ssh oleg@10.0.0.155 "cd /mnt/Odin/Applications/RehearseKit/config && sudo docker compose pull && sudo docker compose up -d"`), 
+- test it properly (not some api calls, open real site via playwright, ask me for credentials if needed)   
