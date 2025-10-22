@@ -41,6 +41,11 @@ frontend/.vercel
 !.env.example
 !config/.env.example
 
+# Secrets and sensitive files
+secrets/
+*.secret
+*.key
+
 # IDEs
 .vscode/
 .idea/

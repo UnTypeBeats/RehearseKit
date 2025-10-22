@@ -26,9 +26,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        const response = await fetch('/_config');
+        console.log('Fetching config from /api/config...');
+        const response = await fetch('/api/config');
+        console.log('Response status:', response.status);
         if (response.ok) {
           const config = await response.json();
+          console.log('Config response:', config);
           setGoogleClientId(config.googleClientId);
           console.log('Fetched Google Client ID:', config.googleClientId);
         } else {
@@ -39,6 +42,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         console.error('Error fetching config:', error);
         setGoogleClientId('');
       } finally {
+        console.log('Setting isLoading to false');
         setIsLoading(false);
       }
     };

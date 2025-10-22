@@ -2,11 +2,13 @@
 Security utilities for authentication
 - Password hashing using bcrypt
 - JWT token generation and validation
+- Token blacklisting/revocation
 """
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 import bcrypt
+import redis
 from app.core.config import settings
 
 
@@ -102,4 +104,110 @@ def verify_token_type(payload: Dict[str, Any], expected_type: str) -> bool:
         True if token type matches, False otherwise
     """
     return payload.get("type") == expected_type
+
+
+def get_redis_client() -> redis.Redis:
+    """Get Redis client for token blacklisting"""
+    return redis.from_url(settings.REDIS_URL)
+
+
+def blacklist_token(token: str, expires_in_seconds: Optional[int] = None) -> bool:
+    """
+    Add a token to the blacklist
+    
+    Args:
+        token: JWT token to blacklist
+        expires_in_seconds: Optional expiration time in seconds (defaults to token's natural expiration)
+        
+    Returns:
+        True if token was successfully blacklisted, False otherwise
+    """
+    try:
+        redis_client = get_redis_client()
+        
+        # If no expiration provided, try to get it from the token
+        if expires_in_seconds is None:
+            try:
+                payload = decode_token(token)
+                if payload and 'exp' in payload:
+                    exp_timestamp = payload['exp']
+                    current_timestamp = datetime.utcnow().timestamp()
+                    expires_in_seconds = int(exp_timestamp - current_timestamp)
+                    if expires_in_seconds <= 0:
+                        return False  # Token already expired
+                else:
+                    return False  # Cannot determine expiration
+            except Exception:
+                return False  # Cannot decode token
+        
+        # Store token in blacklist with expiration
+        redis_client.setex(f"blacklist:{token}", expires_in_seconds, "1")
+        return True
+    except Exception:
+        return False
+
+
+def is_token_blacklisted(token: str) -> bool:
+    """
+    Check if a token is blacklisted
+    
+    Args:
+        token: JWT token to check
+        
+    Returns:
+        True if token is blacklisted, False otherwise
+    """
+    try:
+        redis_client = get_redis_client()
+        return redis_client.exists(f"blacklist:{token}") > 0
+    except Exception:
+        # If Redis is unavailable, assume token is not blacklisted
+        # This is a security trade-off for availability
+        return False
+
+
+def revoke_user_tokens(user_id: str) -> bool:
+    """
+    Revoke all tokens for a specific user by adding them to a user-specific blacklist
+    
+    Args:
+        user_id: User ID whose tokens should be revoked
+        
+    Returns:
+        True if revocation was successful, False otherwise
+    """
+    try:
+        redis_client = get_redis_client()
+        
+        # Set a timestamp for when user tokens were revoked
+        # This allows us to invalidate tokens issued before this timestamp
+        current_timestamp = int(datetime.utcnow().timestamp())
+        redis_client.set(f"user_revoked:{user_id}", current_timestamp)
+        
+        return True
+    except Exception:
+        return False
+
+
+def is_user_revoked(user_id: str, token_issued_at: int) -> bool:
+    """
+    Check if a user's tokens were revoked after a token was issued
+    
+    Args:
+        user_id: User ID to check
+        token_issued_at: Timestamp when the token was issued
+        
+    Returns:
+        True if user was revoked after token was issued, False otherwise
+    """
+    try:
+        redis_client = get_redis_client()
+        revoked_timestamp = redis_client.get(f"user_revoked:{user_id}")
+        
+        if revoked_timestamp:
+            return int(revoked_timestamp) > token_issued_at
+        
+        return False
+    except Exception:
+        return False
 

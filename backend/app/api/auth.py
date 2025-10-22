@@ -5,22 +5,35 @@ Authentication API endpoints
 - Token refresh
 - User profile
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 from uuid import UUID
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from app.core.database import get_db
-from app.core.security import create_access_token, create_refresh_token, decode_token, verify_token_type
+from app.core.security import (
+    create_access_token, create_refresh_token, decode_token, verify_token_type,
+    blacklist_token, is_token_blacklisted, revoke_user_tokens, is_user_revoked
+)
 from app.core.oauth import google_oauth
 from app.core.config import settings
+from app.core.exceptions import (
+    AuthenticationError, TokenError, GoogleAuthError, RateLimitError,
+    create_structured_error_response
+)
 from app.models.user import User
 from app.schemas.user import (
     Token, UserResponse, GoogleAuthRequest, UserLogin, UserRegister,
     RefreshTokenRequest, UserUpdate
 )
+
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer(auto_error=False)
@@ -42,20 +55,35 @@ async def get_current_user(
         )
     
     token = credentials.credentials
+    
+    # Check if token is blacklisted
+    if is_token_blacklisted(token):
+        raise TokenError(
+            detail="Token has been revoked",
+            token_type="access"
+        )
+    
     payload = decode_token(token)
     
     if not payload or not verify_token_type(payload, "access"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+        raise TokenError(
             detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
+            token_type="access"
         )
     
     user_id = payload.get("sub")
     if not user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token payload"
+        raise TokenError(
+            detail="Invalid token payload - missing user ID",
+            token_type="access"
+        )
+    
+    # Check if user tokens were revoked after this token was issued
+    token_issued_at = payload.get("iat", 0)
+    if is_user_revoked(user_id, token_issued_at):
+        raise TokenError(
+            detail="Token has been revoked",
+            token_type="access"
         )
     
     # Fetch user from database
@@ -63,9 +91,9 @@ async def get_current_user(
     user = result.scalar_one_or_none()
     
     if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found or inactive"
+        raise AuthenticationError(
+            detail="User not found or inactive",
+            error_code="USER_NOT_FOUND_OR_INACTIVE"
         )
     
     return user
@@ -89,7 +117,9 @@ async def get_current_user_optional(
 
 
 @router.post("/google", response_model=Token)
+@limiter.limit("10/minute")
 async def google_auth(
+    request: Request,
     auth_request: GoogleAuthRequest,
     db: AsyncSession = Depends(get_db)
 ):
@@ -98,12 +128,18 @@ async def google_auth(
     Creates new user if doesn't exist, updates existing user info
     """
     # Verify ID token and get user info
-    user_info = await google_oauth.verify_id_token(auth_request.id_token)
-    
+    try:
+        user_info = await google_oauth.verify_id_token(auth_request.id_token)
+    except Exception as e:
+        raise GoogleAuthError(
+            detail="Failed to verify Google ID token",
+            google_error=str(e)
+        )
+
     if not user_info:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid Google ID token"
+        raise GoogleAuthError(
+            detail="Invalid Google ID token",
+            google_error="Token verification returned no user info"
         )
     
     oauth_id = user_info["oauth_id"]
@@ -160,7 +196,9 @@ async def google_auth(
 
 
 @router.post("/register", response_model=Token)
+@limiter.limit("3/minute")
 async def register(
+    request: Request,
     user_data: UserRegister,
     db: AsyncSession = Depends(get_db)
 ):
@@ -200,7 +238,9 @@ async def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("5/minute")
 async def login(
+    request: Request,
     credentials: UserLogin,
     db: AsyncSession = Depends(get_db)
 ):
@@ -306,9 +346,40 @@ async def update_current_user_profile(
 
 
 @router.post("/logout")
-async def logout():
+async def logout(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: User = Depends(get_current_user)
+):
     """
-    Logout endpoint (client should discard tokens)
+    Logout endpoint - blacklists the current token
     """
-    return {"message": "Logged out successfully"}
+    token = credentials.credentials
+    
+    # Blacklist the current token
+    blacklist_success = blacklist_token(token)
+    
+    if blacklist_success:
+        return {"message": "Logged out successfully"}
+    else:
+        # Even if blacklisting fails, we still consider logout successful
+        # The token will expire naturally
+        return {"message": "Logged out successfully (token will expire naturally)"}
+
+
+@router.post("/revoke-all-tokens")
+async def revoke_all_tokens(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Revoke all tokens for the current user (useful for security incidents)
+    """
+    user_id = str(current_user.id)
+    
+    # Revoke all tokens for this user
+    revoke_success = revoke_user_tokens(user_id)
+    
+    if revoke_success:
+        return {"message": "All tokens for this user have been revoked"}
+    else:
+        return {"message": "Token revocation may have failed, but tokens will expire naturally"}
 
