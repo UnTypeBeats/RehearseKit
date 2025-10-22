@@ -26,8 +26,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        console.log('Fetching config from /api/config...');
-        const response = await fetch('/api/config');
+        console.log('Fetching config from /api/auth/config...');
+        const response = await fetch('/api/auth/config');
         console.log('Response status:', response.status);
         if (response.ok) {
           const config = await response.json();
