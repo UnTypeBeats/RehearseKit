@@ -19,39 +19,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
       })
   );
 
-  const [googleClientId, setGoogleClientId] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Fetch Google Client ID from API
-  useEffect(() => {
-    const fetchConfig = async () => {
-      try {
-        const response = await fetch('/api/config');
-        const config = await response.json();
-        setGoogleClientId(config.googleClientId);
-        console.log('Fetched Google Client ID:', config.googleClientId);
-      } catch (error) {
-        console.error('Failed to fetch config:', error);
-        // Fallback to environment variable
-        setGoogleClientId(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchConfig();
-  }, []);
-
-  // Show loading state while fetching config
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-kit-blue mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
+  // Use environment variable directly since it's available at build time
+  const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
+  
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('Google Client ID in providers:', googleClientId);
+    console.log('Environment:', process.env.NODE_ENV);
+    console.log('Window client ID:', (window as any).NEXT_PUBLIC_GOOGLE_CLIENT_ID);
   }
 
   return (
