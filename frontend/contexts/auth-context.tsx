@@ -50,7 +50,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refreshed = await refreshAccessToken(apiUrl);
         if (refreshed) {
           // Retry fetching user
-          await fetchUser();
+          const retryResponse = await fetch(`${apiUrl}/api/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${getAccessToken()}`,
+            },
+          });
+          if (retryResponse.ok) {
+            const userData = await retryResponse.json();
+            setUser(userData);
+          } else {
+            clearTokens();
+            setUser(null);
+          }
         } else {
           clearTokens();
           setUser(null);
@@ -143,4 +154,3 @@ export function useAuth() {
   }
   return context;
 }
-
