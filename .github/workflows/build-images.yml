@@ -95,6 +95,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
+          build-args: |
+            NEXT_PUBLIC_APP_NAME=RehearseKit
+            NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
       
       - name: Image digest
         run: echo "Frontend image pushed with digest ${{ steps.meta.outputs.digest }}"
