@@ -21,6 +21,7 @@ services:
       - NODE_ENV=production
       # No NEXT_PUBLIC_API_URL or NEXT_PUBLIC_WS_URL - using runtime detection
       - NEXT_PUBLIC_APP_NAME=RehearseKit
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
     networks:
       - rehearsekit-network
     depends_on:
@@ -64,6 +65,16 @@ services:
       # Application
       - APP_ENV=production
       - DEBUG=false
+      
+      # Authentication
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - REFRESH_TOKEN_EXPIRE_DAYS=7
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
       
       # CORS uses defaults from code (includes localhost:3000, etc.)
       # Don't set CORS_ORIGINS here - Pydantic expects JSON array
