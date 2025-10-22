@@ -9,7 +9,16 @@
       "Bash(then du -sh .next)",
       "Bash(else echo \"Build not found - run ''npm run build'' first\")",
       "Bash(fi)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(curl:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFix Google OAuth on staging - complete solution\n\nThis commit fixes all Google authentication issues on staging (rehearsekit.uk):\n\n**Root Causes Fixed:**\n1. Backend was missing Google OAuth environment variables (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, ADMIN_EMAIL)\n2. Frontend was calling wrong endpoint (/api/config instead of /api/auth/config)\n3. Docker compose had YAML syntax errors and deprecated version field\n4. Security issue: NEXT_PUBLIC_GOOGLE_CLIENT_ID was baked into Docker image via build args\n5. Unused OAuth callback page causing confusion\n\n**Changes:**\n- Remove deprecated `version` field from docker-compose.yml\n- Add missing Google OAuth environment variables to backend service\n- Remove build args from frontend (security fix - no secrets in images)\n- Fix frontend to call correct endpoint: /api/auth/config\n- Remove unused frontend/app/auth/callback/google/page.tsx\n- Add detailed comments explaining runtime configuration approach\n\n**How it works now:**\n- Frontend fetches Google Client ID at runtime from backend /api/auth/config\n- Backend verifies Google ID tokens using configured GOOGLE_CLIENT_ID\n- No secrets baked into Docker images (build once, deploy anywhere)\n- Client-side OAuth with ID tokens (simple, secure, better UX)\n\n**Testing:**\n- ✅ Backend /api/auth/config endpoint working: returns Google Client ID\n- ✅ Endpoint accessible via public FQDN through Cloudflare proxy\n- ✅ All containers healthy (backend, worker)\n- ✅ Frontend serving correctly\n\n**Note:** Frontend needs rebuild/redeploy to pick up the endpoint fix.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)"
     ],
     "deny": [],
     "ask": []
