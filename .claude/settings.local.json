@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(if [ -f .next/build-manifest.json ])",
+      "Bash(then du -sh .next)",
+      "Bash(else echo \"Build not found - run ''npm run build'' first\")",
+      "Bash(fi)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

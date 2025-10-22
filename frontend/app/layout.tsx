@@ -55,15 +55,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.NEXT_PUBLIC_GOOGLE_CLIENT_ID = '${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''}';
-            `,
-          }}
-        />
-      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
         <Providers>
           <div className="relative flex min-h-screen flex-col">

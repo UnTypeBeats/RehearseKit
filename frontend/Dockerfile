@@ -12,13 +12,12 @@ COPY . .
 
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_APP_NAME=RehearseKit
-ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
 # Set environment variables for build
 ENV NEXT_TELEMETRY_DISABLED=1
 # No NEXT_PUBLIC_API_URL or NEXT_PUBLIC_WS_URL - using runtime detection in browser
+# No NEXT_PUBLIC_GOOGLE_CLIENT_ID - using runtime API endpoint instead
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
-ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
 
 # Build the application
 RUN npm run build
