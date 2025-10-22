@@ -35,7 +35,7 @@ from app.schemas.user import (
 # Rate limiter setup
 limiter = Limiter(key_func=get_remote_address)
 
-router = APIRouter(tags=["authentication"])
+router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer(auto_error=False)
 
 
@@ -116,7 +116,7 @@ async def get_current_user_optional(
         return None
 
 
-@router.post("/auth/google", response_model=Token)
+@router.post("/google", response_model=Token)
 @limiter.limit("10/minute")
 async def google_auth(
     request: Request,
@@ -195,7 +195,7 @@ async def google_auth(
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/auth/register", response_model=Token)
+@router.post("/register", response_model=Token)
 @limiter.limit("3/minute")
 async def register(
     request: Request,
@@ -237,7 +237,7 @@ async def register(
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/auth/login", response_model=Token)
+@router.post("/login", response_model=Token)
 @limiter.limit("5/minute")
 async def login(
     request: Request,
@@ -274,7 +274,7 @@ async def login(
     return Token(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/auth/refresh", response_model=Token)
+@router.post("/refresh", response_model=Token)
 async def refresh_token(
     token_request: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db)
@@ -314,7 +314,7 @@ async def refresh_token(
     return Token(access_token=access_token, refresh_token=new_refresh_token)
 
 
-@router.get("/auth/me", response_model=UserResponse)
+@router.get("/me", response_model=UserResponse)
 async def get_current_user_profile(
     current_user: User = Depends(get_current_user)
 ):
@@ -345,7 +345,7 @@ async def update_current_user_profile(
     return current_user
 
 
-@router.post("/auth/logout")
+@router.post("/logout")
 async def logout(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     current_user: User = Depends(get_current_user)
@@ -366,7 +366,7 @@ async def logout(
         return {"message": "Logged out successfully (token will expire naturally)"}
 
 
-@router.post("/auth/revoke-all-tokens")
+@router.post("/revoke-all-tokens")
 async def revoke_all_tokens(
     current_user: User = Depends(get_current_user)
 ):
