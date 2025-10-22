@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from "@/contexts/auth-context";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -26,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   if (typeof window !== 'undefined') {
     console.log('Google Client ID in providers:', googleClientId);
     console.log('Environment:', process.env.NODE_ENV);
-    console.log('Window client ID:', (window as any).NEXT_PUBLIC_GOOGLE_CLIENT_ID);
+    console.log('Window client ID:', (window as unknown as { NEXT_PUBLIC_GOOGLE_CLIENT_ID?: string }).NEXT_PUBLIC_GOOGLE_CLIENT_ID);
   }
 
   return (
