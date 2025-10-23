@@ -39,13 +39,26 @@ router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer(auto_error=False)
 
 
+def is_email_whitelisted(email: str) -> bool:
+    """
+    Check if email domain is in the whitelisted domains list
+    Users from whitelisted domains are auto-approved (is_active=True)
+    """
+    if not email:
+        return False
+
+    email_domain = email.split("@")[-1].lower()
+    return email_domain in settings.WHITELISTED_DOMAINS
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db)
 ) -> User:
     """
-    Dependency to get current authenticated user from JWT token
+    Dependency to get current authenticated user from JWT token (including pending users)
     Raises 401 if token is invalid or user not found
+    Does NOT check is_active - use get_current_active_user for that
     """
     if not credentials:
         raise HTTPException(
@@ -53,31 +66,31 @@ async def get_current_user(
             detail="Not authenticated",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+
     token = credentials.credentials
-    
+
     # Check if token is blacklisted
     if is_token_blacklisted(token):
         raise TokenError(
             detail="Token has been revoked",
             token_type="access"
         )
-    
+
     payload = decode_token(token)
-    
+
     if not payload or not verify_token_type(payload, "access"):
         raise TokenError(
             detail="Invalid or expired token",
             token_type="access"
         )
-    
+
     user_id = payload.get("sub")
     if not user_id:
         raise TokenError(
             detail="Invalid token payload - missing user ID",
             token_type="access"
         )
-    
+
     # Check if user tokens were revoked after this token was issued
     token_issued_at = payload.get("iat", 0)
     if is_user_revoked(user_id, token_issued_at):
@@ -85,18 +98,35 @@ async def get_current_user(
             detail="Token has been revoked",
             token_type="access"
         )
-    
+
     # Fetch user from database
     result = await db.execute(select(User).where(User.id == UUID(user_id)))
     user = result.scalar_one_or_none()
-    
-    if not user or not user.is_active:
+
+    if not user:
         raise AuthenticationError(
-            detail="User not found or inactive",
-            error_code="USER_NOT_FOUND_OR_INACTIVE"
+            detail="User not found",
+            error_code="USER_NOT_FOUND"
         )
-    
+
     return user
+
+
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    """
+    Dependency to get current active user (is_active=True)
+    Use this for protected endpoints that require approved users
+    """
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is pending approval. Please wait for an administrator to approve your account.",
+            headers={"X-Account-Status": "pending"}
+        )
+
+    return current_user
 
 
 async def get_current_user_optional(
@@ -167,14 +197,18 @@ async def google_auth(
             user.full_name = user_info.get("full_name") or user.full_name
         else:
             # Create new user
+            # Auto-approve users from whitelisted domains, otherwise require admin approval
+            is_whitelisted = is_email_whitelisted(email)
+            is_admin = (email == settings.ADMIN_EMAIL)
+
             user = User(
                 email=email,
                 full_name=user_info.get("full_name"),
                 avatar_url=user_info.get("avatar_url"),
                 oauth_provider="google",
                 oauth_id=oauth_id,
-                is_admin=(email == settings.ADMIN_EMAIL),  # Auto-admin for configured email
-                is_active=True
+                is_admin=is_admin,
+                is_active=is_whitelisted or is_admin  # Auto-approve whitelisted domains or admin
             )
             db.add(user)
     else:
@@ -216,12 +250,16 @@ async def register(
         )
     
     # Create new user
+    # Auto-approve users from whitelisted domains, otherwise require admin approval
+    is_whitelisted = is_email_whitelisted(user_data.email)
+    is_admin = (user_data.email == settings.ADMIN_EMAIL)
+
     user = User(
         email=user_data.email,
         full_name=user_data.full_name,
         oauth_provider="email",
-        is_admin=(user_data.email == settings.ADMIN_EMAIL),
-        is_active=True
+        is_admin=is_admin,
+        is_active=is_whitelisted or is_admin  # Auto-approve whitelisted domains or admin
     )
     user.set_password(user_data.password)
     user.update_last_login()

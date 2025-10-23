@@ -94,9 +94,19 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
   useEffect(() => {
     const initAudio = async () => {
       try {
+        // Check if we're in the browser
+        if (typeof window === 'undefined') return;
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
         const ctx = new AudioContext();
+
+        // Check if context is already closed (can happen on fast remounts)
+        if (ctx.state === 'closed') {
+          console.warn('AudioContext was closed immediately after creation');
+          return;
+        }
+
         audioContextRef.current = ctx;
 
         // Create master gain
@@ -120,6 +130,12 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
             // Track longest duration
             if (audioBuffer.duration > longestDuration) {
               longestDuration = audioBuffer.duration;
+            }
+
+            // Check if context is still valid
+            if (ctx.state === 'closed') {
+              console.warn('AudioContext closed during stem loading');
+              return;
             }
 
             // Create gain node for this track
@@ -186,14 +202,20 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
 
     return () => {
       // Cleanup
-      audioContextRef.current?.close();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(console.error);
+      }
       masterWavesurfer.current?.destroy();
     };
   }, [jobId, apiUrl]);
 
   // Playback control using Web Audio API for perfect sync
   const handlePlayPause = () => {
-    if (!audioContextRef.current) return;
+    const ctx = audioContextRef.current;
+    if (!ctx || ctx.state === 'closed') {
+      console.warn('AudioContext not available or closed');
+      return;
+    }
 
     if (isPlaying) {
       // Pause - stop all sources
@@ -204,11 +226,13 @@ export function StemMixer({ jobId, apiUrl }: StemMixerProps) {
       masterWavesurfer.current?.pause();
     } else {
       // Play - create new sources for all tracks
-      const ctx = audioContextRef.current;
       const startTime = ctx.currentTime;
 
       Object.entries(tracks).forEach(([stemType, track]) => {
         if (!track.buffer || !track.gainNode) return;
+
+        // Double-check context is still valid
+        if (!track.audioContext || track.audioContext.state === 'closed') return;
 
         const type = stemType as StemType;
         const isMuted = muted[type] || (soloed !== null && soloed !== type);

@@ -6,6 +6,7 @@
  */
 import React from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,10 +17,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User as UserIcon, Shield } from 'lucide-react';
+import { LogOut, User as UserIcon, Shield, Users } from 'lucide-react';
 
 export function UserMenu() {
   const { user, logout } = useAuth();
+  const router = useRouter();
 
   if (!user) return null;
 
@@ -69,11 +71,16 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled className="cursor-default">
+        <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
           <UserIcon className="mr-2 h-4 w-4" />
           <span>Profile</span>
-          <span className="ml-auto text-xs text-muted-foreground">Soon</span>
         </DropdownMenuItem>
+        {user.is_admin && (
+          <DropdownMenuItem onClick={() => router.push('/admin/users')} className="cursor-pointer">
+            <Users className="mr-2 h-4 w-4" />
+            <span>User Management</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600">
           <LogOut className="mr-2 h-4 w-4" />

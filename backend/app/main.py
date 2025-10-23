@@ -6,7 +6,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.api import jobs, health, youtube, auth
+from app.api import jobs, health, youtube, auth, admin
 
 
 @asynccontextmanager
@@ -54,6 +54,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(admin.router, prefix="/api", tags=["admin"])
 app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(youtube.router, prefix="/api", tags=["youtube"])

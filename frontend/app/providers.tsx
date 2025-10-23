@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from "@/contexts/auth-context";
 import { useState, useEffect } from "react";
+import { getApiUrl } from "@/utils/api";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -26,8 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        console.log('Fetching config from /api/auth/config...');
-        const response = await fetch('/api/auth/config');
+        const apiUrl = getApiUrl();
+        console.log('Fetching config from:', `${apiUrl}/api/auth/config`);
+        const response = await fetch(`${apiUrl}/api/auth/config`);
         console.log('Response status:', response.status);
         if (response.ok) {
           const config = await response.json();

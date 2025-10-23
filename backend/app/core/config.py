@@ -58,7 +58,10 @@ class Settings(BaseSettings):
     
     # Admin Configuration
     ADMIN_EMAIL: str = "oleg@befeast.com"
-    
+
+    # Whitelisted domains for auto-approval (users from these domains don't need admin approval)
+    WHITELISTED_DOMAINS: list[str] = ["befeast.com", "kossoy.com", "rehearsekit.uk"]
+
     class Config:
         env_file = ".env"
         case_sensitive = True

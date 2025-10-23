@@ -38,10 +38,18 @@ async def create_job(
     current_user: Optional[User] = Depends(get_current_user_optional_for_jobs()),
 ):
     """Create a new audio processing job (supports both authenticated and anonymous users)"""
-    
+
     from app.core.database import get_redis
     from app.services.youtube_preview import YouTubePreviewService
-    
+
+    # Block pending users from creating jobs
+    if current_user and not current_user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is pending approval. Please wait for an administrator to approve your account.",
+            headers={"X-Account-Status": "pending"}
+        )
+
     # Determine input type
     if file:
         actual_input_type = InputType.upload
