@@ -351,7 +351,7 @@ export default function AdminUsersPage() {
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <Avatar>
-                            <AvatarImage src={userItem.avatar_url} />
+                            <AvatarImage src={userItem.avatar_url ?? undefined} />
                             <AvatarFallback>
                               {getInitials(userItem.full_name, userItem.email)}
                             </AvatarFallback>
