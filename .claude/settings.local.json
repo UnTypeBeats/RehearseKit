@@ -35,7 +35,8 @@
       "Bash(do sleep 5)",
       "Bash(done)",
       "Bash(npx eslint:*)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

@@ -354,7 +354,7 @@ export default function AdminUsersPage() {
                           <Avatar>
                             <AvatarImage src={userItem.avatar_url ?? undefined} />
                             <AvatarFallback>
-                              {getInitials(userItem.full_name ?? undefined, userItem.email)}
+                              {getInitials(userItem.full_name ?? undefined, userItem.email ?? undefined)}
                             </AvatarFallback>
                           </Avatar>
                           <div>

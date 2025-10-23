@@ -164,7 +164,7 @@ export default function ProfilePage() {
               <Avatar className="w-20 h-20">
                 <AvatarImage src={formData.avatar_url} alt={user.full_name || user.email || ''} />
                 <AvatarFallback className="text-lg">
-                  {getInitials(user.full_name, user.email)}
+                  {getInitials(user.full_name ?? undefined, user.email ?? undefined)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 space-y-1">
@@ -267,7 +267,7 @@ export default function ProfilePage() {
                 <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Member Since</p>
-                  <p className="text-sm text-muted-foreground">{formatDate(user.created_at)}</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(user.created_at ?? undefined)}</p>
                 </div>
               </div>
 
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                 <Calendar className="w-5 h-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">Last Login</p>
-                  <p className="text-sm text-muted-foreground">{formatDate(user.last_login_at)}</p>
+                  <p className="text-sm text-muted-foreground">{formatDate(user.last_login_at ?? undefined)}</p>
                 </div>
               </div>
             </div>
