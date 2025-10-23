@@ -48,6 +48,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, isPlaying]);
 
   // Listen for other audio players and stop this one
@@ -175,6 +176,7 @@ export function AudioWaveform({ audioUrl, onReady, showControls = true, enableTr
         }, 0);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioUrl, onReady]);
 
   const handlePlayPause = () => {

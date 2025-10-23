@@ -123,9 +123,10 @@ class ApiClient {
     let authHeaders = {};
     if (typeof window !== 'undefined') {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { getAuthHeaders } = require('./auth');
         authHeaders = getAuthHeaders();
-      } catch (e) {
+      } catch {
         // Auth module not loaded yet, continue without auth
       }
     }
@@ -200,9 +201,10 @@ class ApiClient {
     let authHeaders = {};
     if (typeof window !== 'undefined') {
       try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { getAuthHeaders } = require('./auth');
         authHeaders = getAuthHeaders();
-      } catch (e) {
+      } catch {
         // Auth module not loaded yet, continue without auth
       }
     }

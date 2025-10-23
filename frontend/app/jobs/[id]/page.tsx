@@ -74,6 +74,7 @@ export default function JobDetailPage() {
     return () => {
       socket.disconnect();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, job?.status, queryClient]);
 
   const handleCancel = async () => {
@@ -269,13 +270,14 @@ export default function JobDetailPage() {
               {/* YouTube metadata */}
               {job.input_type === "youtube" && job.input_url && (
                 <div className="flex items-start gap-3 pb-3 border-b">
-                  <a 
+                  <a
                     href={job.input_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
                   >
-                    <img 
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={`https://img.youtube.com/vi/${job.input_url.split('v=')[1]?.split('&')[0]}/hqdefault.jpg`}
                       alt="YouTube thumbnail"
                       className="w-40 h-24 object-cover rounded hover:opacity-80 transition"

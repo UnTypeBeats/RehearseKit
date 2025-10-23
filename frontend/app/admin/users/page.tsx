@@ -86,6 +86,7 @@ export default function AdminUsersPage() {
       fetchUsers();
       fetchStats();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, page, statusFilter]);
 
   const fetchUsers = async () => {

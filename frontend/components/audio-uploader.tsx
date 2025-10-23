@@ -289,8 +289,9 @@ export function AudioUploader() {
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start gap-3">
               {youtubeThumbnail && (
-                <img 
-                  src={youtubeThumbnail} 
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={youtubeThumbnail}
                   alt={youtubeTitle}
                   className="w-32 h-20 object-cover rounded"
                 />

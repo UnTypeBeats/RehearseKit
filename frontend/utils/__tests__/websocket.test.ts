@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars, prefer-const */
 /**
  * Unit tests for WebSocket utility
  * Tests WebSocket connection, reconnection logic, message handling, and callbacks

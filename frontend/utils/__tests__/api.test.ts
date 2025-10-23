@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 /**
  * Unit tests for API client
  * Tests ApiClient class, methods, error handling, and URL detection

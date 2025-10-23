@@ -26,7 +26,16 @@
       "Bash(npm test:*)",
       "Bash(npm test:coverage:*)",
       "Bash(npm run test:coverage:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(./infrastructure/truenas/redeploy.sh:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(gh run view:*)",
+      "Bash(while ! gh run view 18748886082 --log)",
+      "Bash(/dev/null)",
+      "Bash(do sleep 5)",
+      "Bash(done)",
+      "Bash(npx eslint:*)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []
