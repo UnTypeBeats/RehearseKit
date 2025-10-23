@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Unit tests for UserMenu component
  * Tests avatar, user info, navigation, logout functionality

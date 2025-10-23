@@ -39,8 +39,7 @@ import {
   XCircle,
   Shield,
   ShieldOff,
-  Clock,
-  TrendingUp
+  Clock
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getApiUrl } from '@/utils/api';

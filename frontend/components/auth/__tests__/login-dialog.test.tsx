@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any */
 /**
  * Unit tests for LoginDialog component
  * Tests Google OAuth, email/password form, error handling

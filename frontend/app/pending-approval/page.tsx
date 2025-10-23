@@ -78,7 +78,7 @@ export default function PendingApprovalPage() {
               <div>
                 <h3 className="font-semibold">Waiting for Approval</h3>
                 <p className="text-sm text-muted-foreground">
-                  An administrator will review your account shortly. You'll be able to access all features once approved.
+                  An administrator will review your account shortly. You&apos;ll be able to access all features once approved.
                 </p>
               </div>
             </div>
@@ -94,11 +94,11 @@ export default function PendingApprovalPage() {
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>You'll receive an email notification once your account is approved</span>
+                <span>You&apos;ll receive an email notification once your account is approved</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>After approval, you'll have full access to RehearseKit features</span>
+                <span>After approval, you&apos;ll have full access to RehearseKit features</span>
               </li>
             </ul>
           </div>

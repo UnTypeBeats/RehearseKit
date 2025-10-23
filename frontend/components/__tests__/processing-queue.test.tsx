@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-require-imports */
 /**
  * Unit tests for ProcessingQueue component
  * Tests job list rendering, polling, React Query integration, loading and error states

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * Unit tests for Header component
  * Tests navigation, auth state display, login dialog, and status indicator
