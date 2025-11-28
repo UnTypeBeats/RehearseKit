@@ -83,11 +83,11 @@ async def create_job(
     await db.commit()
     await db.refresh(job)
     
-    # Handle file upload
+    # Handle file upload - save_upload returns relative path
     if file:
         storage = StorageService()
         file_path = await storage.save_upload(file, job.id)
-        job.source_file_path = file_path
+        job.source_file_path = file_path  # Now stores relative path
         await db.commit()
         await db.refresh(job)
     
@@ -109,7 +109,8 @@ async def create_job(
             os.makedirs(os.path.dirname(dest_path), exist_ok=True)
             shutil.copy2(preview_file, dest_path)
             
-            job.source_file_path = dest_path
+            # Store relative path in database
+            job.source_file_path = storage.to_relative_path(dest_path)
             await db.commit()
             await db.refresh(job)
             
@@ -227,13 +228,17 @@ async def reprocess_job(
             detail="Can only reprocess completed jobs"
         )
     
-    if not original_job.source_file_path or not os.path.exists(original_job.source_file_path):
+    # Resolve relative path to absolute for file existence check
+    storage = StorageService()
+    abs_source_path = storage.get_local_path(original_job.source_file_path) if original_job.source_file_path else None
+    
+    if not abs_source_path or not os.path.exists(abs_source_path):
         raise HTTPException(
             status_code=400,
             detail="Source file no longer available for reprocessing"
         )
     
-    # Create new job with upgraded quality
+    # Create new job with upgraded quality - keep relative path
     new_job = Job(
         project_name=f"{original_job.project_name} (High Quality)",
         quality_mode=QualityMode[quality_mode],
@@ -243,7 +248,7 @@ async def reprocess_job(
         trim_start=original_job.trim_start,
         trim_end=original_job.trim_end,
         status=JobStatus.PENDING,
-        source_file_path=original_job.source_file_path,  # Reuse source file
+        source_file_path=original_job.source_file_path,  # Keep relative path
     )
     
     db.add(new_job)
@@ -299,11 +304,15 @@ async def get_source_audio(
     
     # For local mode, serve the file directly
     if settings.STORAGE_MODE == "local":
-        if not os.path.exists(job.source_file_path):
+        # Resolve relative path to absolute
+        storage = StorageService()
+        abs_path = storage.get_local_path(job.source_file_path)
+        
+        if not os.path.exists(abs_path):
             raise HTTPException(status_code=404, detail="Source file not found on disk")
         
         return FileResponse(
-            path=job.source_file_path,
+            path=abs_path,
             media_type="audio/mpeg",  # Browser can handle multiple audio types
             filename=f"{job.project_name}_source.wav"
         )
@@ -337,8 +346,12 @@ async def get_stem(
     if not job.stems_folder_path:
         raise HTTPException(status_code=404, detail="Stems not found")
     
+    # Resolve relative path to absolute
+    storage = StorageService()
+    abs_stems_path = storage.get_local_path(job.stems_folder_path)
+    
     # Find the stem file
-    stem_file = os.path.join(job.stems_folder_path, f"{stem_type}.wav")
+    stem_file = os.path.join(abs_stems_path, f"{stem_type}.wav")
     
     if not os.path.exists(stem_file):
         raise HTTPException(status_code=404, detail=f"Stem file not found: {stem_type}")
@@ -372,11 +385,15 @@ async def download_package(
     
     # For local mode, serve the file directly
     if settings.STORAGE_MODE == "local":
-        if not os.path.exists(job.package_path):
+        # Resolve relative path to absolute
+        storage = StorageService()
+        abs_path = storage.get_local_path(job.package_path)
+        
+        if not os.path.exists(abs_path):
             raise HTTPException(status_code=404, detail="Package file not found on disk")
         
         return FileResponse(
-            path=job.package_path,
+            path=abs_path,
             filename=f"{job.project_name}_RehearseKit.zip",
             media_type="application/zip"
         )
@@ -385,4 +402,3 @@ async def download_package(
         storage = StorageService()
         url = await storage.get_download_url(job.package_path)
         return {"url": url, "redirect": True}
-

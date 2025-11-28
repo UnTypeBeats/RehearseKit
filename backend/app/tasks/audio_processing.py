@@ -94,15 +94,23 @@ def process_audio_job(self, job_id: str):
         job = loop.run_until_complete(get_job())
         
         # 1. Acquire audio
-        if job.source_file_path and os.path.exists(job.source_file_path):
-            # Source file already exists (reprocessing or upload)
-            source_path = storage.get_local_path(job.source_file_path)
-        elif job.input_type.value == "upload":
-            source_path = storage.get_local_path(job.source_file_path)
-        else:
+        # Use storage.get_local_path() to resolve relative paths to absolute
+        if job.source_file_path:
+            abs_source_path = storage.get_local_path(job.source_file_path)
+            if os.path.exists(abs_source_path):
+                source_path = abs_source_path
+            elif job.input_type.value == "youtube":
+                # YouTube download
+                update_job_status(job_id, "CONVERTING", 5, redis_client)
+                source_path = audio_service.download_youtube(job.input_url, temp_dir)
+            else:
+                source_path = abs_source_path
+        elif job.input_type.value == "youtube":
             # YouTube download
             update_job_status(job_id, "CONVERTING", 5, redis_client)
             source_path = audio_service.download_youtube(job.input_url, temp_dir)
+        else:
+            raise ValueError("No source file or YouTube URL provided")
         
         # 2. Convert to WAV
         update_job_status(job_id, "CONVERTING", 10, redis_client)
@@ -175,19 +183,22 @@ def process_audio_job(self, job_id: str):
         for stem_file in Path(stems_dir).glob("*.wav"):
             shutil.copy2(stem_file, os.path.join(permanent_stems_dir, stem_file.name))
         
+        # Convert stems path to relative for database storage
+        relative_stems_path = storage.to_relative_path(permanent_stems_dir)
+        
         # 8. Create final package and upload
         update_job_status(job_id, "PACKAGING", 92, redis_client)
         package_path = os.path.join(temp_dir, f"{job.project_name}_RehearseKit.zip")
         audio_service.create_package(stems_dir, dawproject_path, package_path, final_bpm)
         
-        # Upload to storage
+        # Upload to storage - save_file now returns relative path
         final_package_path = storage.save_file(
             package_path,
             f"{job_id}.zip",
             settings.GCS_BUCKET_PACKAGES
         )
         
-        # Update job as completed
+        # Update job as completed with relative paths
         async def complete_job():
             from datetime import datetime
             async with AsyncSessionLocal() as db:
@@ -195,8 +206,8 @@ def process_audio_job(self, job_id: str):
                 stmt = update(Job).where(Job.id == UUID(job_id)).values(
                     status="COMPLETED",
                     progress_percent=100,
-                    package_path=final_package_path,
-                    stems_folder_path=permanent_stems_dir,
+                    package_path=final_package_path,  # Now relative path
+                    stems_folder_path=relative_stems_path,  # Now relative path
                     completed_at=datetime.utcnow()
                 )
                 await db.execute(stmt)
@@ -231,4 +242,3 @@ def process_audio_job(self, job_id: str):
         # Cleanup temp directory
         shutil.rmtree(temp_dir, ignore_errors=True)
         redis_client.close()
-
