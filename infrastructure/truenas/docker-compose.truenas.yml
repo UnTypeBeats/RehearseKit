@@ -1,215 +1,123 @@
-# RehearseKit - TrueNAS SCALE Deployment
-# This compose file is optimized for TrueNAS SCALE custom app deployment
-# Assumes PostgreSQL is running separately on TrueNAS
+# RehearseKit - TrueNAS Production Deployment
+# Stack name: ok-rehearsekit
+# Managed via Portainer: https://10.10.0.15:31015
+#
+# Required environment variables (set in .env or Portainer):
+# - DATABASE_URL
+# - REDIS_URL
+# - JWT_SECRET_KEY
+# - GOOGLE_CLIENT_ID
+# - GOOGLE_CLIENT_SECRET
+# - GOOGLE_REDIRECT_URI
+# - ADMIN_EMAIL
+
+name: ok-rehearsekit
 
 services:
-  # Frontend - Next.js 14
   frontend:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/rehearsekit-frontend:${IMAGE_TAG:-latest}
+    image: docker.io/kossoy/rehearsekit-frontend:latest
     container_name: rehearsekit-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "30070:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_APP_NAME=RehearseKit
-      # Google Client ID fetched at runtime from backend /api/auth/config
-      # NO NEXT_PUBLIC_GOOGLE_CLIENT_ID here - it's fetched dynamically
     networks:
       - rehearsekit-network
     depends_on:
       - backend
       - websocket
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    labels:
-      - "com.rehearsekit.service=frontend"
-      - "com.rehearsekit.version=${IMAGE_TAG:-latest}"
 
-  # Backend - FastAPI
   backend:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/rehearsekit-backend:${IMAGE_TAG:-latest}
+    image: docker.io/kossoy/rehearsekit-backend:latest
     container_name: rehearsekit-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "30071:8000"
     environment:
-      # Database - Connect to existing TrueNAS PostgreSQL
       - DATABASE_URL=${DATABASE_URL}
-      
-      # Redis - Existing TrueNAS Redis app
       - REDIS_URL=${REDIS_URL}
       - CELERY_BROKER_URL=${REDIS_URL}
       - CELERY_RESULT_BACKEND=${REDIS_URL}
-      
-      # Storage - Local mode with TrueNAS volumes
       - STORAGE_MODE=local
       - LOCAL_STORAGE_PATH=/mnt/storage/rehearsekit
-      
-      # GCS (not used in TrueNAS mode, but required by config)
       - GCS_BUCKET_UPLOADS=local-uploads
       - GCS_BUCKET_STEMS=local-stems
       - GCS_BUCKET_PACKAGES=local-packages
-      
-      # Application
       - APP_ENV=production
       - DEBUG=false
-      
-      # JWT Authentication
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
       - JWT_ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=1440
       - REFRESH_TOKEN_EXPIRE_DAYS=7
-
-      # Google OAuth - CRITICAL FOR AUTH TO WORK
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
-
-      # Admin Configuration
       - ADMIN_EMAIL=${ADMIN_EMAIL}
-
-      # CORS uses defaults from code (includes localhost:3000, etc.)
-      # Don't set CORS_ORIGINS here - Pydantic expects JSON array
     volumes:
-      # TrueNAS dataset mounted to /mnt/storage/rehearsekit
-      - ${STORAGE_PATH:-/mnt/tank/apps/rehearsekit/storage}:/mnt/storage/rehearsekit
+      - /mnt/Odin/Applications/RehearseKit:/mnt/storage/rehearsekit
     networks:
       - rehearsekit-network
-    # No depends_on for Redis since it's external
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    labels:
-      - "com.rehearsekit.service=backend"
-      - "com.rehearsekit.version=${IMAGE_TAG:-latest}"
 
-  # WebSocket Service
   websocket:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/rehearsekit-websocket:${IMAGE_TAG:-latest}
+    image: docker.io/kossoy/rehearsekit-websocket:latest
     container_name: rehearsekit-websocket
     restart: unless-stopped
     ports:
-      - "${WEBSOCKET_PORT:-8001}:8001"
+      - "30072:8001"
     environment:
       - REDIS_URL=${REDIS_URL}
     networks:
       - rehearsekit-network
-    # No depends_on for Redis since it's external
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8001/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    labels:
-      - "com.rehearsekit.service=websocket"
-      - "com.rehearsekit.version=${IMAGE_TAG:-latest}"
 
-  # Celery Worker
-  worker:
-    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME}/rehearsekit-backend:${IMAGE_TAG:-latest}
-    container_name: rehearsekit-worker
+  gpu-worker:
+    image: rehearsekit-gpu-worker:latest
+    container_name: rehearsekit-gpu-worker
     restart: unless-stopped
-    command: celery -A app.celery_app worker --loglevel=info --concurrency=2
+    command: celery -A app.celery_app worker --loglevel=info --concurrency=1 -n gpu-worker@%h
     environment:
-      # Database
       - DATABASE_URL=${DATABASE_URL}
-      
-      # Redis - Existing TrueNAS Redis app
       - REDIS_URL=${REDIS_URL}
       - CELERY_BROKER_URL=${REDIS_URL}
       - CELERY_RESULT_BACKEND=${REDIS_URL}
-      
-      # Storage
       - STORAGE_MODE=local
       - LOCAL_STORAGE_PATH=/mnt/storage/rehearsekit
-      
-      # GCS (not used)
-      - GCS_BUCKET_UPLOADS=local-uploads
-      - GCS_BUCKET_STEMS=local-stems
-      - GCS_BUCKET_PACKAGES=local-packages
+      - DEMUCS_DEVICE=cuda
+      - DEMUCS_SEGMENT=7
+      - MKL_THREADING_LAYER=GNU
     volumes:
-      # Shared storage with backend
-      - ${STORAGE_PATH:-/mnt/tank/apps/rehearsekit/storage}:/mnt/storage/rehearsekit
+      - /mnt/Odin/Applications/RehearseKit:/mnt/storage/rehearsekit
     networks:
       - rehearsekit-network
     depends_on:
       - backend
-      # Redis is external, not a container
-    healthcheck:
-      test: ["CMD", "celery", "-A", "app.celery_app", "inspect", "ping"]
-      interval: 60s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    labels:
-      - "com.rehearsekit.service=worker"
-      - "com.rehearsekit.version=${IMAGE_TAG:-latest}"
-    # Resource limits (adjust based on your TrueNAS hardware)
     deploy:
       resources:
-        limits:
-          cpus: '4'
-          memory: 8G
         reservations:
-          cpus: '2'
-          memory: 4G
-
-  # NOTE: Redis is NOT deployed here - using existing TrueNAS Redis
-  # The existing Redis app at 10.0.0.155:6379 is used instead
-  # If you need a separate Redis, uncomment below:
-  #
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: rehearsekit-redis
-  #   restart: unless-stopped
-  #   ports:
-  #     - "${REDIS_PORT:-6379}:6379"
-  #   command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-  #   volumes:
-  #     - ${REDIS_DATA_PATH:-/mnt/Odin/apps/rehearsekit/redis}:/data
-  #   networks:
-  #     - rehearsekit-network
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-
-  # Optional: Nginx reverse proxy for single-port access
-  # Uncomment if you want to access everything through port 80/443
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: rehearsekit-nginx
-  #   restart: unless-stopped
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ${SSL_CERT_PATH:-./certs}:/etc/nginx/certs:ro
-  #   networks:
-  #     - rehearsekit-network
-  #   depends_on:
-  #     - frontend
-  #     - backend
-  #     - websocket
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
 
 networks:
   rehearsekit-network:
     driver: bridge
-
-# Notes:
-# - PostgreSQL is NOT included (use existing TrueNAS PostgreSQL)
-# - Storage volumes should be created as TrueNAS datasets
-# - Adjust resource limits based on your hardware
-# - Set environment variables in .env file (see .env.example)
-
